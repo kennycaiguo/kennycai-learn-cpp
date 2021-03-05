@@ -1,0 +1,4 @@
+类的继承方式又三种public,protected ,private。其中最常用public。
+采用public方式继承，父类中的private成员不可见，其它成员可见，访问权限跟父类一样
+采用protected方式继承，父类中的private成员不可见，其它成员可见，访问权限都变成protected
+采用private方式继承，父类中的private成员不可见，其它成员可见，访问权限都变成private

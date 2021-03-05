@@ -1,0 +1,634 @@
+C++中的智能指针
+
+自C语言以来，指针就是一个重要却又充满了麻烦的特性。使用指针的一个理由是在作用域以外使用引用语义。但是，指针的生命期和所指对象的生命期的确认是十分恼人的一件事情，尤其是多个指针指向同一个对象。例如，为了在多个集合中拥有同一个对象，必须要给每个集合传入指针。在理想的情况下，其中一个指针被销毁了，没有任何问题会发生（即没有空悬指针，也不会重复删除被引用的对象），当指向对象的最后一个指针被销毁时，该对象才会被销毁（即没有资源泄漏）。
+
+为了避免各种问题，一种通用的解决方案是使用智能指针。智能指针之所以智能是因为它们可以支持程序员来避免上述的问题。例如，智能指针可以智能地知道它是不是最后一个指向对象的指针，并且据此可以实现由对象的最后一个指针来决定对象的销毁。
+
+但是仅仅只有一种智能指针是不足够的。智能指针针对各种情况是十分智能的，但会导致其他方面的随时，因为要为智能付出代价。即便使用智能指针，也会存在误用和产生错误的情况。
+
+C++11提供两种智能指针（定义在<memory>）：
+
+1、shared_ptr可以用来实现共享所有权的概念。多个智能指针可以引用同一个对象，当最后一个智能指针销毁时，对象销毁。为了使智能指针能适用于更复杂的情景，weak_ptr,bad_weak_ptr和enable_shared_from_this。
+
+2、unique_ptr可用用来实现互斥所有权的概念，在一段时间内，只有一个智能指针可以指向对象。当然，这种所有权是可以转移的。这种智能指针可以有效地避免资源泄漏，比如忘记调用delete来释放堆对象。
+
+C++98曾经使用过auto_ptr，但是由于缺乏移动语义等语言特性，这种指针是难以理解并且容易出错的，现在不再建议使用auto_ptr
+
+
+
+Class shared_ptr
+
+几乎所用程序都需要同时处理不同位置的对象，因此必须采用“引用”的概念。虽然C++有原生的指针和引用，但是这显然不足以面对各种情况，因为你经常需要做到当对象的最后一个指针销毁时，销毁对象（这会带来一些清理操作，比如清理内存和释放资源）。
+
+类shared_ptr便应运而生，它提供了共享所有权语义，因此多个shared_ptr可以共享同一个对象，最后一个指针负责它的销毁。
+
+默认地，清理时调用delete，假设对象使用new生成。但是，也可以，有时候是必须，定义其他方式来清理对象。你可以定义自动的销毁策略。例如，使用new[]创建一个对象数组，则必须使用delete[]。再例如，清理相关联资源的时候，比如句柄、锁、相关的临时文件等等。
+
+简而言之，share_ptr的目标是自动释放对象关联的资源，当对象不再被需要的时候。
+
+
+
+使用shared_ptr
+
+智能指针的使用方式和指针一样，例如：
+
+// util/sharedptr1.cpp
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+using namespace std;
+int main()
+{
+// two shared pointers representing two persons by their name
+    shared_ptr<string> pNico(new string("nico"));
+    shared_ptr<string> pJutta(new string("jutta"));
+// capitalize person names
+    (*pNico)[0] = ’N’;
+    pJutta->replace(0,1,"J");
+// put them multiple times in a container
+    vector<shared_ptr<string>> whoMadeCoffee;
+    whoMadeCoffee.push_back(pJutta);
+    whoMadeCoffee.push_back(pJutta);
+    whoMadeCoffee.push_back(pNico);
+    whoMadeCoffee.push_back(pJutta);
+    whoMadeCoffee.push_back(pNico);
+// print all elements
+    for (auto ptr : whoMadeCoffee) {
+        cout << *ptr << " ";
+    }
+    cout << endl;
+// overwrite a name again
+    *pNico = "Nicolai";
+// print all elements again
+    for (auto ptr : whoMadeCoffee) {
+        cout << *ptr << " ";
+    }
+    cout << endl;
+// print some internal data
+    cout << "use_count: " << whoMadeCoffee[0].use_count() << endl;
+}
+在例子当中，两个智能指针被初始化。为了避免隐式转换，智能指针不能使用赋值的方式初始化，当然使用括号初始化或者列表初始化是没有问题的。另一种初始化的方法是使用make_shared<>，它是一种更好且更安全的方法：因为使用new时会创建一个对象，计算它的引用计数时会创建一个对象，而make_shared只会创建一个对象，并且不会出现控制模块失效的情况。
+
+另一种可选方案是先定义一个智能指针再进行赋值。但是不能使用赋值运算符（=），必须使用reset函数
+
+shared_ptr<string> pNico4;
+pNico4 = new string("nico"); // ERROR: no assignment for ordinary pointers
+pNico4.reset(new string("nico")); // OK
+在容器是插入元素的拷贝，因此本例中会插入智能指针的拷贝，从而会出现多个指针指向同一个对象的情况。如果我们修改对象，那么容器中所有指针引用的对象都会发生改变。
+
+使用use_count 函数可以获得智能指针的引用计数。
+
+当例子执行完毕的时候，vector销毁，即最后一个智能指针也被销毁，所以对象随即也被销毁。当然，销毁的情况多种多样，比如将指针的赋值为nullptr，比如重置vector。
+
+
+
+定义销毁行为
+
+我们可以自定义销毁行为，例如：
+
+shared_ptr<string> pNico(new string("nico"),
+                         [](string* p) {
+                             cout << "delete " << *p << endl;
+                             delete p;
+                             }
+);
+...
+pNico = nullptr; // pNico does not refer to the string any longer
+whoMadeCoffee.resize(2); // all copies of the string in pNico are destroyed
+这里我们使用lambda，作为构造函数的第二个参数。当对象的最后一个指针被调用时，lambda被调用。
+
+
+
+处理数组
+
+默认的销毁行为不会执行delete[]，所以不要使用默认销毁行为来生成数组的智能指针，而是自己定义销毁行为，例如：
+
+std::shared_ptr<int> p(new int[10],
+                       [](int* p) {
+                       delete[] p;
+                       }
+);
+另一种方式也可以：
+
+std::shared_ptr<int> p(new int[10],
+                       std::default_delete<int[]>());
+注意到shared_ptr和unique_ptr执行销毁行为的时候有所区别。例如，unique_ptr通过传入元素类型作为模板参数来获得数组的所有权，而shared_ptr不能这么做。
+
+std::unique_ptr<int[]> p(new int[10]); // OK
+std::shared_ptr<int[]> p(new int[10]); // ERROR: does not compile
+除此以外，unique_ptr还必须要定义第二参数作为删除行为
+
+std::unique_ptr<int,void(*)(int*)> p(new int[10],
+                                     [](int* p) {
+                                     delete[] p;
+                                     }
+);
+shared_ptr不提供[]运算符。当数组存在时，unique_ptr支持部分实例化，支持使用[]运算符。
+
+
+
+处理其他销毁策略
+
+处理清理内存以外，还有其他的资源需要处理，以下是一个清理临时文件的示例：
+
+#include <string>
+#include <fstream> // for ofstream
+#include <memory> // for shared_ptr
+#include <cstdio> // for remove()
+class FileDeleter
+{
+private:
+    std::string filename;
+public:
+    FileDeleter (const std::string& fn)
+    : filename(fn) {
+    }
+void operator () (std::ofstream* fp) {
+         fp->close(); // close.file
+         std::remove(filename.c_str()); // delete file
+    }
+};
+int main()
+{
+// create and open temporary file:
+    std::shared_ptr<std::ofstream> fp(new std::ofstream("tmpfile.txt"),
+                                      FileDeleter("tmpfile.txt"));
+    ...
+}
+执行了关闭文件和清理字符串的操作
+
+以下是一个清理共享内存的示例：
+
+// util/sharedptr3.cpp
+#include <memory> // for shared_ptr
+#include <sys/mman.h> // for shared memory
+#include <fcntl.h>
+#include <unistd.h>
+#include <cstring> // for strerror()
+#include <cerrno> // for errno
+#include <string>
+#include <iostream>
+class SharedMemoryDetacher
+{
+public:
+    void operator () (int* p) {
+        std::cout << "unlink /tmp1234" << std::endl;
+        if (shm_unlink("/tmp1234") != 0) {
+            std::cerr << "OOPS: shm_unlink() failed" << std::endl;
+//析构函数不要抛出异常
+        }
+    }
+};
+std::shared_ptr<int> getSharedIntMemory (int num)
+{
+     void* mem;
+     int shmfd = shm_open("/tmp1234", O_CREAT|O_RDWR, S_IRWXU|S_IRWXG);
+     if (shmfd < 0) {
+         throw std::string(strerror(errno));
+     }
+     if (ftruncate(shmfd, num*sizeof(int)) == -1) {
+         throw std::string(strerror(errno));
+     }
+     mem = mmap(nullptr, num*sizeof(int), PROT_READ | PROT_WRITE,
+               MAP_SHARED, shmfd, 0);
+     if (mem == MAP_FAILED) {
+          throw std::string(strerror(errno));
+     }
+     return std::shared_ptr<int>(static_cast<int*>(mem),
+                                   SharedMemoryDetacher());
+}
+
+int main()
+{
+// get and attach shared memory for 100 ints:
+    std::shared_ptr<int> smp(getSharedIntMemory(100));
+// init the shared memory
+    for (int i=0; i<100; ++i) {
+        smp.get()[i] = i*42;
+    }
+// deal with shared memory somewhere else:
+    ...
+    std::cout << "<return>" << std::endl;
+    std::cin.get();
+// release shared memory here:
+    smp.reset();
+    ...
+}
+首先定义函数对象释放共享内存，并将其作为删除行为传入make_shared的第二参数。
+
+get函数可以返回shared_ptr的内部指针，从而可以实现指针语义
+
+当然还有一种更加清晰的实现方法：构造函数实现初始化，析构函数实现清理。这样就可以简单地使用shared_ptr管理对象。
+
+
+
+类weak_ptr
+
+使用shared_ptr的主要原因是不想关注资源的释放。但是某些情况下shared_ptr会出现错误或者失效。
+
+1、循环引用问题：如果两个对象使用shared_ptr指向彼此，当释放的时候，将不会自动释放资源，因为引用计数的计算有问题。
+
+2、当共享对象的时候，指针的生命期要长于对象，因此对象不会被shared_ptr删除。指针就无法注意到对象是否释放。
+
+weak_ptr通过共享对象的方式来解决这种问题。首先需要有shared_ptr，当最后一个shared_ptr删除时，weak_ptr变为空。weak_ptr不能直接访问对象，必须根据它来创建一个shared_ptr来访问，原因如下：
+
+1、根据weak_ptr创建shared_ptr的时候会检查是否有对象
+
+2、当处理对象的时候，shared_ptr不能被释放
+
+// util/weakptr1.cpp
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+using namespace std;
+class Person {
+public:
+    string name;
+    shared_ptr<Person> mother;
+    shared_ptr<Person> father;
+    vector<shared_ptr<Person>> kids;
+    Person (const string& n,
+            shared_ptr<Person> m = nullptr,
+            shared_ptr<Person> f = nullptr)
+    : name(n), mother(m), father(f) {
+    }
+    ~Person() {
+         cout << "delete " << name << endl;
+    }
+};
+shared_ptr<Person> initFamily (const string& name)
+{
+    shared_ptr<Person> mom(new Person(name+"’s mom"));
+    shared_ptr<Person> dad(new Person(name+"’s dad"));
+    shared_ptr<Person> kid(new Person(name,mom,dad));
+    mom->kids.push_back(kid);
+    dad->kids.push_back(kid);
+    return kid;
+}
+int main()
+{
+    shared_ptr<Person> p = initFamily("nico");
+    cout << "nico’s family exists" << endl;
+    cout << "- nico is shared " << p.use_count() << " times" << endl;
+    cout << "- name of 1st kid of nico’s mom: "
+         << p->mother->kids[0]->name << endl;
+    p = initFamily("jim");
+    cout << "jim’s family exists" << endl;
+}
+kids应该修改vector<weak_ptr<Person>>，来避免资源泄漏
+
+使用lock函数可以返回weak_ptr对应的shared_ptr，但是先应该检查是否为空
+
+使用expired检查引用计数是否为0（它更快些），使用use_count亦可
+
+
+
+智能指针的错误使用
+
+1、循环依赖会导致空悬指针
+
+2、一个对象生成的shared_ptr应该只有一个，其他的都是从shared_ptr那里拷贝过去
+
+3、使用enable_shared_from_this会返回本对象的shared_ptr，使用方式是继承enable_shared_from_this<className>。不能在构造函数里面调用，因为shared_ptr会把它自己作为私有成员存放在基类中在对象构造函数结束的时候，所以调用时根本就不存在，自然无法调用。
+
+
+
+shared_ptr的细节
+
+1、shared_ptr的模板参数可以是void，表示未确定类型
+
+2、当一个对象的所有权被转移到已经拥有其他对象的shared_ptr的时候，相当于先释放原对象，再获取新对象。
+
+3、销毁行为（函数）不要抛出异常
+
+4、存在隐式指针转换的情况下，shared_ptr可以使用不同的类型。
+
+5、比较运算符会按照内部指针来比较
+
+6、别名构造函数会使用另一个shared_ptr和一个附加的原始指针作为参数，它能获取对象之间的拥有关系，例如：
+
+struct X
+{
+    int a;
+};
+shared_ptr<X> px(new X);
+shared_ptr<int> pi(px, &px->a);
+X类型的对象拥有成员a，所以创造一个shared_ptr管理a，你可以通过别名构造函数的方式来关注a所在对象（拥有权相关的对象）的引用计数，从而保证a（实际指向的对象）的生存期。其他更复杂的例子包括容器元素的引用等。程序员必须要保证拥有权相关的对象和实际指向的对象的生命期一致，从而避免空悬指针或者资源泄漏，例如：
+
+shared_ptr<X> sp1(new X);
+shared_ptr<X> sp2(sp1,new X); // ERROR: delete for this X will never be called
+sp1.reset(); // deletes first X; makes sp1 empty
+shared_ptr<X> sp3(sp1,new X); // use_count()==0, but get()!=nullptr
+7、allocate_shared的效果和make_shared基本一致，allocate_shared可以传入自己的配置器作为第一个参数。
+
+8、shared_ptr的类型转换的用法和一般指针一致，转换后的结果是另一个类型的shared_ptr。但是不要使用一般的类型转换运算符，而应该采用static_pointer_cast<newTypeName>:
+
+shared_ptr<void> sp(new int); // shared pointer holds a void* internally...
+shared_ptr<int>(static_cast<int*>(sp.get())) // ERROR: undefined behavior
+static_pointer_cast<int*>(sp) // OK
+weak_ptr的细节
+
+weak_ptr是shared_ptr的辅助类，它的作用是共享而不拥有一个对象。它的use_count函数返回对象的拥有者数量，而weak_ptr的数量不会记录。此外，weak_ptr可以是空的，当没有使用shared_ptr初始化或者是对象被销毁的情况下。weak_ptr是一个模板类，模板参数为对象的类型。
+
+weak_ptr的默认构造函数创造一个空指针，这意味着expired函数返回true。因为lock返回一个shared_ptr，对象的引用计数会增加当这个shared_ptr存活的时候。使用lock是修改weak_ptr指向对象的唯一方式。
+
+
+
+智能指针的线程安全
+
+通常而言，智能指针是非线程安全的。在编写多线程程序中，为了避免竞态条件导致的未定义行为，需要使用一些技术，比如互斥区或者是锁。幸运的是，读取另一个线程修改的引用计数并不会构成竞态条件，但是数值可能不是最新值。事实上，一个线程检查引用计数的时候，另一个线程可以修改它。
+
+智能指针也提供了原子操作的接口，从而能处理并发智能指针的并发问题。注意这些原子操作是为指针准备的，而不是为对象准备的。例如：
+
+std::shared_ptr<X> global; // initially nullptr
+void foo()
+{
+    std::shared_ptr<X> local{new X};
+    ...
+    std::atomic_store(&global,local);//存储指针
+}
+
+
+类unique_ptr
+
+unique_ptr是一种智能指针，它有助于避免抛出异常的时候的内存泄漏问题。一般而言，这种智能指针实现了排他拥有关系的概念，即它确保一个对象和相关的资源在某一时间只能被一个指针所拥有。当这个指针被销毁、置空或者拥有其他对象的时候，原对象会被销毁，资源会被释放。
+
+unique_ptr取代了auto_ptr，它更加简单，接口更加清晰并且更不易出错。
+
+
+
+使用unique_ptr的意图
+
+函数通常会执行类型后续的行为的：1、获取资源；2、执行操作；3、释放资源。
+
+如果在局部对象之中，释放资源行为会自动在函数退出的时候调用，因为局部对象的析构函数会被调用。但是，如果资源是被主动申请的，不属于任何对象，那资源也必须要显式释放。典型的处理资源方式是使用指针来管理。最经典的例子是使用new和delete来管理对象：
+
+void f()
+{
+    ClassA* ptr = new ClassA; // create an object explicitly
+    ... // perform some operations
+    delete ptr; // clean up (destroy the object explicitly)
+}
+这种函数是麻烦的来源。一个明显的问题就是容易遗忘对象的删除，尤其是使用return语句的时候；另一种明显的问题就是发生异常，而没有调用delete表达式，导致内存泄漏或者资源泄漏。发生异常导致泄漏的解决方法通常是捕获所有类型的异常，例如：
+
+void f()
+{
+    ClassA* ptr = new ClassA; // create an object explicitly
+    try {
+         ... // perform some operations
+    }
+    catch (...) { // for any exception
+        delete ptr; // - clean up
+        throw; // - rethrow the exception
+    }
+    delete ptr; // clean up on normal end
+}
+这种方法使得代码非常复杂而且恼人，尤其是对象或者异常数量增加的时候。因此需要避免这种编码方式。
+
+使用智能指针将有助于解决这个问题。智能指针指向的对象会自动销毁当指针销毁的时候。进一步讲，因为指针是一个局部变量，当函数销毁的时候指针会自动销毁，无论是正常退出还是抛出异常。unique_ptr就是这样的智能指针。以下就是例子：
+
+// header file for unique_ptr
+#include <memory>
+void f()
+{
+    // create and initialize an unique_ptr
+    std::unique<ClassA> ptr(new ClassA);
+    ... // perform some operations
+}
+显然不再需要使用delete和catch。
+
+
+
+使用unique_ptr
+
+智能指针的使用方式和原始指针一样。*和->运算符均可以使用。但是不能使用++等运算符。
+
+std::unique_ptr<std::string> up(new std::string("nico"));
+(*up)[0] = ’N’; // replace first character
+up->append("lai"); // append some characters
+std::cout << *up << std::endl; // print whole string
+和shared_ptr一样，不能直接将原始指针赋值给unique_ptr，但是可以使用圆括号来调用构造函数。
+
+Unique_ptr可以是空的，使用默认构造函数就是如此。当然也可以置空或者是调用reset。此外，还可以调用release来放弃拥有权，调用bool确认拥有权，使用get来获取原始指针。
+
+
+
+转移unique_ptr的拥有权
+
+使用一般的拷贝语义不能拷贝智能指针或给智能指针赋值。可以使用移动语义来转移智能指针的拥有权。以下是示例：
+
+// initialize a unique_ptr with a new object
+std::unique_ptr<ClassA> up1(new ClassA);
+// copy the unique_ptr
+std::unique_ptr<ClassA> up2(up1); // ERROR: not possible
+// transfer ownership of the unique_ptr
+std::unique_ptr<ClassA> up3(std::move(up1)); // OK
+赋值运算符也是如此：
+
+// initialize a unique_ptr with a new object
+std::unique_ptr<ClassA> up1(new ClassA);
+std::unique_ptr<ClassA> up2; // create another unique_ptr
+up2 = up1; // ERROR: not possible
+up2 = std::move(up1); // assign the unique_ptr
+                      // - transfers ownership from up1 to up2
+如果up2在之前拥有另一个对象，转移时会销毁那个对象。被转移的智能指针会失去拥有权
+
+
+
+来源和去向
+
+使用智能指针来转移拥有权有一种特殊的用途，那就是将函数的控制权转移到另一个函数。有两种方式来实现：
+
+1、一个函数作为数据的去向，当unique_ptr被作为参数传入函数（使用std::move()创造它的右值引用）的时候。在这种情况下，函数的参数会获取拥有权，因此，如果函数不再转移的话，函数退出的时候对象会被销毁。
+
+2、一个函数作为数据的来源。当返回一个unique_ptr类型的时候，拥有权会发生转移，示例如下：
+
+std::unique_ptr<ClassA> source()
+{
+    std::unique_ptr<ClassA> ptr(new ClassA); // ptr owns the new object
+    ...
+    return ptr; // transfer ownership to calling function
+}
+void g()
+{
+    std::unique_ptr<ClassA> p;
+    for (int i=0; i<10; ++i) {
+        p = source(); // p gets ownership of the returned object
+                      // (previously returned object of f() gets deleted)
+        ...
+    }
+} // last-owned object of p gets deleted
+每次source被调用的时候，它使用new创造一个对象，并且返回这个对象和拥有权给调用者。将返回值赋值给p的过程会转移拥有权。当下个循环时，p会删除原来的对象，并重新获取新的返回值。当离开g的时候，p被销毁，最后的对象也会销毁。无论什么情况下，都不会发生资源泄漏，即使抛出异常。例子中不使用move的原因是编译器会自动优化为移动语义。（当然不要将返回值定义为右值引用，只会导致空悬指针）
+
+
+
+Unique_ptr类型的成员函数
+
+在类中使用智能指针可以避免资源泄漏。使用智能指针就不再需要手动释放，因为会随着成员的销毁而一并销毁。除此以外，智能指针可以避免抛出异常导致的资源泄漏。因为析构函数必须要在构造函数完成以后才会生成，所以当构造函数内部发生异常的时候，只会调用已经构造完成的对象的析构函数。这种行为会导致拥有多个原始指针的类发生内存泄漏。使用智能指针可以避免这种问题。
+
+
+
+处理数组
+
+由于继承了C的语法，所以C++不能区分数组和指针，但是又由于删除堆上的数组需要采用delete[]，所以以下的语句是错误的：
+
+std::unique_ptr<std::string> up(new std::string[10]); // runtime ERROR
+
+
+和shared_ptr不一样的是，unique_ptr不使用自定义销毁行为，而是采用unique_ptr<>模板的部分实例化来解决这个问题：
+
+std::unique_ptr<std::string[]> up(new std::string[10]); // OK
+部分实例化以后，只能使用[]操作符来访问数组中的元素，不能使用*操作符（可以认为数组和指针的概念出现了差别）。和之前一样，确保下标有效是程序员的职责。除此以外，这个模板类也不允许使用基类类型初始化一个派生类数组，多态在数组这里是无效的。
+
+
+
+类default_delete<>
+
+让我们简略地查看以下unique_ptr的类定义。在概念上，如下所示：
+
+namespace std {
+// primary template:
+template <typename T, typename D = default_delete<T>>
+class unique_ptr
+{
+public:
+    ...
+    T& operator*() const;
+    T* operator->() const noexcept;
+    ...
+};
+// partial specialization for arrays:
+template<typename T, typename D>
+class unique_ptr<T[], D>
+{
+    public:
+    ...
+    T& operator[](size_t i) const;
+    ...
+};
+
+}
+从上面可以看出，处理数组的智能指针是特殊处理的。它只提供了[]操作符而不是*或->操作符来访问元素。但是两个类都采用了类std::default_delete<>作为删除行为，当处理数组时，它会实例化为调用delete[]而不是delete
+
+namespace std {
+// primary template:
+template <typename T> class default_delete {
+public:
+    void operator()(T* p) const; // calls delete p
+    ...
+};
+// partial specialization for arrays:
+template <typename T> class default_delete<T[]> {
+public:
+    void operator()(T* p) const; // calls delete[] p
+    ...
+};
+}
+unique_ptr的自定义销毁行为和shared_ptr有区别，必须作为作为模板类的第二参数传入（而不是构造函数的第二参数），并且要指明销毁行为的具体类型（必须是函数对象），例如：
+
+class ClassADeleter
+{
+public:
+    void operator () (ClassA* p) {
+        std::cout << "call delete for ClassA object" << std::endl;
+        delete p;
+    }
+};
+...
+std::unique_ptr<ClassA,ClassADeleter> up(new ClassA());
+如果 想要使用lambda，则需要将销毁行为的类型作为模板参数传入，例如：
+
+std::unique_ptr<int,void(*)(int*)> up(new int[10],
+                                     [](int* p) {
+                                         ...
+                                         delete[] p;
+                                     }
+);
+除了使用void(*)(int*)以外，还可以使用std::function<void(int*)>，或者联合使用auto和decltype来提取类型。当然为了简化书写，也可使用模板类型别名特性。下面是一个完整的例子：
+
+// util/uniqueptr1.cpp
+#include <iostream>
+#include <string>
+#include <memory> // for unique_ptr
+#include <dirent.h> // for opendir(), ...
+#include <cstring> // for strerror()
+#include <cerrno> // for errno
+using namespace std;
+class DirCloser
+{
+public:
+    void operator () (DIR* dp) {
+        if (closedir(dp) != 0) {
+            std::cerr << "OOPS: closedir() failed" << std::endl;
+        }
+    }
+};
+int main()
+{
+// open current directory:
+    unique_ptr<DIR,DirCloser> pDir(opendir("."));
+// process each directory entry:
+    struct dirent *dp;
+    while ((dp = readdir(pDir.get())) != nullptr) {
+        string filename(dp->d_name);
+        cout << "process " << filename << endl;
+        ...
+    }
+}
+使用unique_ptr的另外一个好处是避免复制。比如readdir时，就不会有拷贝行为来修改状态。
+
+Unique_ptr的细节
+
+unique_ptr提供了排他拥有的概念。这确保了智能指针的生命期和对象是一致的，有助于保证抛出异常时的安全性。unique_ptr的主要目标时最小的时间和空间额外负担。
+
+元素类型可以是void的，可以实现类似void*的行为。unique_ptr的模板参数可以是其他智能指针，因为实例化的时候，具体的指针类型是由销毁行为（函数对象）所定义的，与模板参数无关，也就不会被模板参数的具体类型所限制。
+
+构造会有一些不同的重载形式：
+
+D d; // instance of the deleter type
+unique_ptr<int, D> p1(new int, D()); // D must be MoveConstructible
+unique_ptr<int, D> p2(new int, d); // D must be CopyConstructible
+unique_ptr<int, D&> p3(new int, d); // p3 holds a reference to d
+unique_ptr<int, const D&> p4(new int, D()); // Error: rvalue deleter object
+                                            // can’t have reference deleter type
+auto_ptr的缺陷：
+
+1、auto_ptr拷贝和赋值采用了移动语义，当作为参数传递的时候会导致严重的问题；
+
+2、没有销毁行为，只适用于销毁new生成的对象；
+
+3、容易误用在需要表达共享所有权的场景。
+
+错误示例：
+
+// this is a bad example
+template <typename T>
+void bad_print(std::auto_ptr<T> p) // p gets ownership of passed argument
+{
+// does p own an object ?
+    if (p.get() == NULL) {
+        std::cout << "NULL";
+    }
+    else {
+        std::cout << *p;
+    }
+} // Oops, exiting deletes the object to which p refers
+
+
+智能指针总结：
+
+性能相关：
+
+shared_ptr的开销包括多个成员：一个一般指针，一个引用计数和另外一个适用于weak_ptr的引用计数。由于shared_ptr中必须有辅助对象，故使用shared_ptr会导致一些性能优化无法实现，比如空基类优化（减少内存额外开销）
+
+而unique_ptr不需要额外开销。它的智能性是来源于特殊的构造函数、析构函数和消灭拷贝语义。使用空的销毁行为的时候，unique_ptr的消耗和原始指针一致。使用自定义的销毁行为，在理想状态下的消耗是和手动释放资源一致的。
+
+用法相关：
+
+1、智能指针并非十全十美。比如，不能在一个原始指针上创建多个智能指针。
+
+2、在处理数组上面，两种智能指针表现不同。unique_ptr采用部分实例化的方式，这种方式更加灵活，效率更高，但是使用较为复杂。
+
+3、一般而言，智能指针不是线程安全的，但是有些安全性能够得到保证（比如读取的安全性）。

@@ -1,0 +1,79 @@
+我们知道，在构造子类对象的时候会先调用父类的构造函数。所以子类的vptr的初始化是分两步的。
+首先在子对象类中是有一块内存区域是跟父类一模一样的。创建子类对象会先创建这一块内存，
+这时候vptr是指向父类的虚函数表的。然后会创建子类的剩余的空间当子类的所有空间都初始化完毕，
+此时vptr就指向子类的虚函数表。
+
+实例：
+
+#include <iostream>
+
+using namespace std;
+
+class Parent
+
+{
+private:
+    int a;
+
+public:
+    Parent(/* args */);
+    Parent(int a);
+    ~Parent();
+    virtual void print();
+};
+
+Parent ::Parent(/* args */)
+{
+}
+Parent ::Parent(int a)
+{
+    this->a = a;
+    print(); //这个print函数一定会调用父类的。原因上面以及说明了。
+}
+Parent ::~Parent()
+{
+}
+void Parent ::print()
+{
+    cout << "Parent::print" << endl;
+    cout << "a= " << a << endl;
+}
+class Child : public Parent
+
+{
+private:
+    int b;
+
+public:
+    Child(/* args */);
+    Child(int a, int b);
+    ~Child();
+    virtual void print();
+};
+
+Child ::Child(/* args */)
+{
+}
+
+Child ::Child(int a, int b) : Parent(a)
+{
+    this->b = b;
+}
+
+Child ::~Child()
+{
+}
+void Child ::print()
+{
+    cout << "Child::print" << endl;
+    cout << "b= " << b << endl;
+}
+int main(int argc, char const *argv[])
+{
+    Parent *p = new Child(100, 200);
+
+    return 0;
+}
+
+也就是说，在实际的开发中最好不要在构造方法中不要业务代码，因为这样子是不会有多态的效果的。
+也就是说多态情况不会发生在构造函数中。

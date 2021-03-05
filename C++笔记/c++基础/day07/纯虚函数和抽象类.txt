@@ -1,0 +1,201 @@
+C++ 纯虚函数和抽象类
+纯虚函数和定义
+ 
+在许多情况下，在基类中不能对虚函数给出有意义有实现，而把它说明为纯虚函数。纯虚函数是没有函数体的
+虚函数，它的实现留给该基类的派生类去做，这就是纯虚函数的作用。含义一个以上纯虚函数的类就是抽象类。
+注意：最好将抽象类的析构函数修改为虚函数。这样子在使用多态的后程序结束时候才会去调用子类的析构函数。
+这样子更加安全。
+ 
+ 
+class A
+{
+private:
+    int a;
+public:
+    virtual void Print( ) = 0 ;   //纯虚函数
+    void fun( )
+    {
+        cout << "fun";
+    }
+};
+ 
+纯虚函数的标志是：在其声明后有一个特殊的语法  =0
+抽象类
+带有纯虚函数的类称为抽象类。抽象类是一种特殊的类，它是为了抽象和设计的目的而建立的，它处于继承层次
+结构的较上层。
+充要条件：至少有一个纯虚(pure virtual)方法。
+抽象类是不能定义对象的，在实际中为了强调一个类是抽象类，可将该类的构造函数说明为保护的访问控制权限。
+若一个类的构造函数声明为私有的，则该类和该类的派生类都不能创建对象；若构造函数声明为保护型，则该类
+不能创建对象，但它的派生类是可以创建对象的。
+ 
+ 抽象类通常有派生类－没有派生类的抽象类是多余的.
+ 
+例如
+复制代码
+class B1
+{
+protected:
+    B1() {}
+};
+class B2
+{
+private:
+    B2() {}
+};
+class D1 : public B1
+{
+public:
+    D1() {}
+};
+class D2 : public B2
+{
+public:
+    D2() {}  // error C2248: “B2::B2”: 无法访问 private 成员(在“B2”类中声明)
+};
+int main()
+{
+    B1 b1;  // error C2248: “B1::B1”: 无法访问 protected 成员(在“B1”类中声明)
+    B2 b2;  // error C2248: “B2::B2”: 无法访问 private 成员(在“B2”类中声明)
+    D1 d1;  // OK
+    D2 d2;  // error
+    return 0;
+}
+ 
+ 
+抽象类只能作为基类来派生新类使用，不能创建抽象类的对象，但抽象类的指针和引用可以指向由抽象类派生出
+来的类的对象。
+ 
+A a ; // 错，A 是抽象类，不能创建对象
+A * pa ; // ok,可以定义抽象类的指针和引用
+pa = new A ; //错误, A 是抽象类，不能创建对象
+ 
+
+从抽象类派生的类必须实现基类的纯虚函数，否则该派生类也不能创建对象。
+ 
+class Base
+{
+public:
+    virtual void func( ) = 0;
+};
+class Derived : public Base { }
+int main( )
+{
+    Derived d;  //error C2259: “Derived”: 不能实例化抽象类
+    return 0;
+}
+ 
+上例中，派生类中没有对基类的纯虚函数进行定义（派生类不重置基类的纯虚函数），那么派生类自身也就成了
+一个抽象类，无法被实例化。
+
+ 
+
+ 
+抽象类特征：
+1.可以有多个(≥1)纯虚方法；
+2.可以有非纯虚方法；
+3.可以有非虚方法；
+4.可以有数据成员；
+5.可以定义成员的访问控制(对外能见度)。
+ 
+其中后四点为所有类的共同特点。
+ 
+class ABC
+{
+public:
+    ABC( )
+    {
+        …
+    }
+    ABC(int x)
+    {
+        …
+    }
+    ~ABC( )
+    {
+        …
+    }
+    virtual void open( ) = 0;
+    virtual void print()
+    {
+        …
+    }
+    int getCount( )
+    {
+        …
+    }
+private:
+    int n;
+}
+ 
+ 
+
+抽象类用途
+1.抽象基类用来说明一族类的共同接口(shared interface).
+ 
+ 
+ 
+class BasicFile
+{
+public:
+    virtual int open( ) =0;
+    virtual int close( ) =0;
+    virtual int flush( ) = 0;
+};
+class InFile : public BasicFile
+{
+public:
+    virtual int open( )
+    {
+        …
+    };
+    virtual int close( )
+    {
+        …
+    };
+    virtual int flush( )
+    {
+        …
+    };
+};
+class OutFile : public BasicFile
+{
+public:
+    virtual int open( )
+    {
+        …
+    };
+    virtual int close( )
+    {
+        …
+    };
+    virtual int flush( )
+    {
+        …
+    };
+};
+ 
+ 
+2.抽象类可以用来表明某种软件设计需求。
+ 
+class  IIntroSpect
+{
+public:
+    virtual void listFields ( ) =0;
+    virtual void listMethods( ) =0;
+};
+
+class MyClass : public IIntroSpect// 有实例的类
+{
+public:
+    void listFields ( )
+    {
+        …
+    };
+    void listMethods( )
+    {
+        …
+    };
+    // other members of MyClass
+};
+ 
+ 

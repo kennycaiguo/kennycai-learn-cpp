@@ -1,0 +1,35 @@
+1.语法：
+自己定义的一个命名空间的语法namespace 命名空间名称{...}，可以在同一个文件在定义，也可以
+在头文件中定义。
+2.实例：
+在头文件在定义一个叫做mynamesp的命名空间
+custnamespace.h的内容：
+#include <string>
+using namespace std;
+
+// 自己定义的一个命名空间的语法namespace{...}
+ 
+namespace mynamesp
+{
+    typedef int myint;
+    typedef string mystr;
+} 
+
+custnamespace.cpp的内容：
+#include <iostream>
+#include "custnamespace.h"
+
+using namespace std;
+//使用自己定义的一个命名空间的语法namespace{...}
+using namespace mynamesp;
+
+int main(int argc, char const *argv[])
+{
+    /* code */
+    myint a = 10;
+    mystr msg = "Hello MY namespace!!!";
+    cout << "a=" << a << endl;
+    cout << "msg=" << msg << endl;
+    return 0;
+}
+

@@ -1,0 +1,11 @@
+c++中的cout，cin，endl，string 类等等都是定义在namespace std中，
+所以cpp文件一定要包含<iostream>头文件和使用名称空间std
+格式：
+#include <iostream>
+using namespace std;
+
+int main(int argc, char const *argv[])
+{
+    cout << "hello world!" << endl;
+    return 0;
+}

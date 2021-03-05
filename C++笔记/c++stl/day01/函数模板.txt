@@ -1,0 +1,25 @@
+1.定义函数模板是格式：
+template<typename T> //也可以这么写template<class T>，这句话只对后面的第一个函数有效。尖括号里面可以写多个参数。
+void MySwap(T &a, T &b)
+{
+	T tmp = a;
+	a = b;
+	b = tmp;
+
+}
+在函数的上一行使用template关键字，使用通用类型T来代替参数类型，其它写法跟普通函数类似。
+调用：
+int main(int argc, char const *argv[])
+{
+                 //自动推导
+	int a = 10, b = 20;
+	cout << "before swap............." << endl;
+	cout << "a=" << a << ",b=" << b << endl;
+	MySwap(a, b);
+	cout << "After swap............." << endl;
+	cout << "a=" << a << ",b=" << b << endl;
+                //显式指定类型
+	MySwap<int>(a, b);
+	system("pause");
+	return 0;
+}

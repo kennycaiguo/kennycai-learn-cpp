@@ -1,0 +1,66 @@
+必须包含<memory>头文件，智能指针是auto_ptr类型。使用方法auto_ptr<int> ptr(new int):定义一个
+整型只能指针。使用：*ptr=20；智能指针不需要手动释放。他会自动调用类的析构函数。如果想自定义一个
+智能指针类，则需要自己实现操作符->和*的重载。
+如：
+class A
+{
+public:
+	A(int a)
+	{
+		cout << "Constructor with one parameter..." << endl;
+		this->a = a;
+	}
+	void print()
+	{
+		cout << "a=" << this->a << endl;
+	}
+	~A()
+	{
+		cout << "Deconstructor called...." << endl;
+	}
+
+private:
+	int a;
+};
+//实现一个自定义的智能指针，只要需要重载->操作符和*操作符
+class MyAutoptr
+{
+public:
+	//MyAutoptr(void* p)
+	MyAutoptr(A* p)
+	{
+		cout << "constructor..." << endl;
+		this->ptr = p;
+	}
+
+	A* operator->()
+	{
+		return this->ptr;
+	}
+
+	A& operator*()
+	{
+		return *(this->ptr);
+	}
+	~MyAutoptr()
+	{
+		cout << "deconstructor..." << endl;
+		if (this->ptr != NULL)
+		{
+			delete this->ptr;
+			this->ptr = NULL;
+		}
+	}
+private:
+	//void *ptr;
+	A *ptr;
+};
+
+int main(int argc,char*argv[])
+{
+   MyAutoptr ptr(new A(20));
+	ptr->print();
+	cout << "=========================" << endl;
+	(*ptr).print();
+   return 0;
+}

@@ -1,0 +1,115 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+
+using namespace std;
+
+class Complex
+{
+public:
+	Complex()
+	{
+
+	}
+	Complex(int a, int b)
+	{
+		this->a = a;
+		this->b = b;
+	}
+	/*int getA()
+	{
+		return this->a;
+	}
+	int getB()
+	{
+		return this->b;
+	}*/
+	void setA(int a)
+	{
+		this->a = a;
+
+	}
+	void setB(int b)
+	{
+		this->b = b;
+
+	}
+	void setComplex(int a, int b)
+	{
+		this->a = a;
+		this->b = b;
+	}
+	void printComplex()
+	{
+		cout << "(" << this->a << ", " << this->b << "i)" << endl;
+	}
+	//friend Complex ComplexAdd(Complex & c1, Complex & c2);
+	friend ostream & operator<<(ostream &out, Complex &c);
+	 
+	Complex operator+(Complex & c2)
+	{
+		Complex total(this->a + c2.a, this->b + c2.b);
+		return total;
+	}
+	Complex& operator+=(Complex& c2)
+	{
+		this->a += c2.a;
+		this->b += c2.b;
+		return *this;
+	}
+	Complex& operator++() //这个是前++
+	{
+		this->a++;
+		this->b++;
+		return *this;
+	}
+	//后++的成员方法
+	const Complex operator++(int)
+	{
+		Complex tmp(this->a, this->b);
+		this->a++;
+		this->b++;
+		return tmp;
+	}
+	////重载操作符<<,不建议作为类的成员方法
+	//ostream & operator<<(ostream &out)
+	//{
+	//	out << "(" << this->a << ", " << this->b << "i)";
+	//	return out;
+	//}
+private:
+	int a;//复数的实部
+	int b;//复数的虚部
+};
+
+//左移操作全局实现
+ostream & operator<<(ostream &out, Complex &c)
+{
+	out << "(" << c.a << ", " << c.b << "i)";
+	return out;
+}
+//左移操作全局实现
+istream & operator>>(istream &in, Complex &c)
+{
+	int left, right;
+	cout << "left part:";
+	in >> left;
+	cout << "right part:";
+	in >> right;
+	c.setComplex(left, right);
+
+	return in;
+}
+int main(int argc, char const *argv[])
+{
+	/*Complex c(2, 4);
+	 cout<<c;*/
+	Complex c;
+	cin >> c;
+	cout << "the Complex you entered is :" << c << endl;
+	system("pause");
+	return 0;
+}
+
+注意：重载操作符<<和>>都应该放在全局而不是类的成员方法。否则会出现含义改变的现象。
+注意：>>操作符输入时遇到空格就会返回，空格以后的内容就接受不到。解决办法是在重载
+>>操作符的时候使用istream引用对象的getline(char* tmp,int len)方法代替。

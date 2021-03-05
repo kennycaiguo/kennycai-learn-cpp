@@ -1,0 +1,107 @@
+T&&是右值引用。它和普通引用（也叫做左值引用）的区别是：
+它可以像临时对象一样绑定到右值，而不必使用 const。因此，此语法现在合法：
+
+T&& r = T();
+右值引用主要提供以下内容：
+
+移动语义 。现在可以定义移动构造函数和移动赋值运算符，该运算符采用右值引用而不是通常的 const - 左值
+引用。移动的功能类似于副本，只是它没有义务保持源不变。实际上，它通常会修改源，使其不再拥有移动的
+资源。这对于消除多余的副本非常有用，尤其是在标准库实现中。
+
+例如，复制构造函数可能如下所示：
+
+foo(foo const& other)
+{
+    this->length = other.length;
+    this->ptr = new int[other.length];
+    copy(other.ptr, other.ptr + other.length, this->ptr);
+}
+如果将此构造函数传递给临时对象，则不需要复制，因为我们知道临时对象将被销毁。为什么不利用已分配的
+临时资源？在 C ++ 03 中，由于无法确定是否已通过临时复制，因此无法阻止复制。在 C ++ 11 中，
+我们可以重载 move 构造函数：
+
+foo(foo&& other)
+{
+   this->length = other.length;
+   this->ptr = other.ptr;
+   other.length = 0;
+   other.ptr = nullptr;
+}
+注意这里的最大区别：move 构造函数实际上是修改其参数。这将有效地将临时文件 “移动” 
+到正在构造的对象中，从而消除了不必要的复制。
+
+move 构造函数将用于临时对象和非常量左值引用，这些引用已使用std::move函数（仅执行转换）
+显式转换为右值引用。以下代码均调用f1和f2的 move 构造函数：
+
+foo f1((foo())); // Move a temporary into f1; temporary becomes "empty"
+foo f2 = std::move(f1); // Move f1 into f2; f1 is now "empty"
+完美的转发 。右值引用使我们能够正确转发模板函数的参数。以这个工厂功能为例：
+
+template <typename T, typename A1>
+std::unique_ptr<T> factory(A1& a1)
+{
+    return std::unique_ptr<T>(new T(a1));
+}
+如果我们调用factory<foo>(5) ，则将推导该参数为int& ，即使foo的构造函数采用int ，该参数也不会绑定
+到文字 5。好吧，我们可以改用A1 const& ，但是如果foo通过非 const 引用接受构造函数参数怎么办？
+为了实现真正的通用工厂功能，我们必须在A1&和A1 const&上重载工厂。如果 factory 采用 1 个参数类型，
+则可能会很好，但是每个其他参数类型都会将必要的重载设置乘以 2。这很快就无法维护。
+
+右值引用通过允许标准库定义可以正确转发左值 / 右值引用的std::forward函数来解决此问题。
+这使我们能够定义工厂功能，如下所示：
+
+template <typename T, typename A1>
+std::unique_ptr<T> factory(A1&& a1)
+{
+    return std::unique_ptr<T>(new T(std::forward<A1>(a1)));
+}
+现在，当传递给T的构造函数时，参数的 rvalue / lvalue-ness 被保留。这意味着，如果使用 rvalue 调用 factory，则使用 rvalue 调用T的构造函数。如果使用左值调用 factory，则使用左值调用T的构造函数。改进的工厂功能之所以有效，是因为以下一条特殊规则：
+
+当函数参数类型的形式为T&& ，其中T为模板参数，并且函数参数为类型A的左值时，类型A&用于模板参数推导。
+
+因此，我们可以像这样使用工厂：
+
+auto p1 = factory<foo>(foo()); // calls foo(foo&&)
+auto p2 = factory<foo>(*p1);   // calls foo(foo const&)
+重要的右值参考属性 ：
+
+对于重载解析， 左值倾向于绑定到左值引用，右值倾向于绑定到右值引用 。因此，为什么临时人员比复制构造函数 / 赋值运算符更喜欢调用移动构造函数 / 移动赋值运算符。
+右值引用将隐式绑定到右值和作为隐式转换结果的临时对象 。即float f = 0f; int&& i = f;格式良好，因为 float 可以隐式转换为 int；该引用将是转换后的结果。
+命名的右值引用是左值。未命名的右值引用是右值。了解为什么为什么必须在以下位置进行std::move调用非常重要： foo&& r = foo(); foo f = std::move(r);
+它表示右值参考。右值引用将仅绑定到临时对象，除非以其他方式明确生成。它们用于在某些情况下使对象效率更高，并提供一种称为 “完美转发” 的功能，该功能大大简化了模板代码。
+
+在 C ++ 03 中，您无法区分非可变左值和右值的副本。
+
+std::string s;
+std::string another(s);           // calls std::string(const std::string&);
+std::string more(std::string(s)); // calls std::string(const std::string&);
+在 C ++ 0x 中，不是这种情况。
+
+std::string s;
+std::string another(s);           // calls std::string(const std::string&);
+std::string more(std::string(s)); // calls std::string(std::string&&);
+考虑这些构造函数背后的实现。在第一种情况下，字符串必须执行复制以保留值语义，这涉及新的堆分配。但是，在第二种情况下，我们预先知道传递给我们的构造函数的对象将立即被销毁，并且不必保持原样。在这种情况下，我们可以有效地交换内部指针而根本不执行任何复制，这实际上要更有效率。移动语义使任何具有昂贵或禁止复制内部引用资源的类受益。考虑std::unique_ptr的情况 - 现在我们的类可以区分临时对象和非临时对象，我们可以使移动语义正确工作，从而不能复制unique_ptr而是可以移动它，这意味着std::unique_ptr可以可以合法地存储在 Standard 容器中，进行排序等，而 C ++ 03 的std::auto_ptr不能。
+
+现在，我们考虑右值引用的另一种用法 - 完美转发。考虑将引用绑定到引用的问题。
+
+std::string s;
+std::string& ref = s;
+(std::string&)& anotherref = ref; // usually expressed via template
+记不清 C ++ 03 所说的内容，但是在 C ++ 0x 中，处理右值引用时的结果类型至关重要。对类型 T 的右值引用（其中 T 是引用类型）成为类型 T 的引用。
+
+(std::string&)&& ref // ref is std::string&
+(const std::string&)&& ref // ref is const std::string&
+(std::string&&)&& ref // ref is std::string&&
+(const std::string&&)&& ref // ref is const std::string&&
+考虑最简单的模板功能 - 最小和最大。在 C ++ 03 中，必须手动重载 const 和非 const 的所有四个组合。在 C ++ 0x 中，这只是一个重载。结合可变参数模板，可以实现完美的转发。
+
+template<typename A, typename B> auto min(A&& aref, B&& bref) {
+    // for example, if you pass a const std::string& as first argument,
+    // then A becomes const std::string& and by extension, aref becomes
+    // const std::string&, completely maintaining it's type information.
+    if (std::forward<A>(aref) < std::forward<B>(bref))
+        return std::forward<A>(aref);
+    else
+        return std::forward<B>(bref);
+}
+我省去了返回类型推导，因为我不记得它是如何完成的，但是 min 可以接受左值，右值，常量左值的任意组合。

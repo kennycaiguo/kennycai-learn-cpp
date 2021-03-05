@@ -1,0 +1,53 @@
+有三种定义函数指针的方法。函数指针还可以作为一个函数的参数。
+
+#include <iostream>
+
+using namespace std;
+
+int func1(int a, int b)
+{
+    cout << "这是加法程序" << endl;
+    return a + b;
+}
+int func2(int a, int b)
+{
+    cout << "这是减法程序" << endl;
+    return a - b;
+}
+
+int func3(int a, int b)
+{
+    cout << "这是比较程序" << endl;
+    return a > b ? a : b;
+}
+
+typedef int(FUNC)(int, int);
+
+typedef int (*PFUNC)(int, int);
+
+void funcptrasparam(int (*pfun)(int, int),int a, int b)
+{
+  int  res= pfun(a, b);
+  cout << "result=" << res << endl;
+}
+int main(int argc, char const *argv[])
+{
+    /*  int (*pfun)(int, int) = func1;//method1
+    int res = pfun(10, 20);
+    cout << "result=" << res << endl;
+    pfun = func2;
+    res = pfun(10, 20);
+    cout << "result=" << res << endl;
+    pfun = func3;
+    res = pfun(10, 20);
+    cout << "result=" << res << endl; */
+
+   /*  FUNC *pf = func1; //method2
+    int res = pf(100, 200);
+    cout << "result=" << res << endl;
+    PFUNC pf2 = func2;
+    int result = pf2(300, 150); //method3
+    cout << "result=" << result << endl; */
+   funcptrasparam(func1, 100, 200);//调用含有函数指针的函数。
+    return 0;
+}

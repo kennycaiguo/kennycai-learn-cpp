@@ -1,0 +1,113 @@
+就是调用同一个方法，传递父类变量，调用父类的方法，传递子类，调用子类的方法。
+前提，必须在父类的这个方法前面加virtual关键字，而且最好是public方法。
+
+举例说明：
+1.没有使用virtual关键字：
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class Fu
+{
+public:
+    Fu() {}
+    Fu(string food)
+    {
+        this->food = food;
+    }
+    string food;
+    void eat()
+    {
+        cout << "fu eat" << food << endl;
+    }
+};
+class Zi : public Fu
+{
+public:
+    Zi(string food)
+    {
+        this->food = food;
+    }
+
+    void eat()
+    {
+        cout << "Zi eat " << food << endl;
+    }
+};
+
+void Action(Fu *pf)
+{
+    pf->eat();
+}
+int main(int argc, char const *argv[])
+{
+    Fu *f = new Fu("咸菜");
+    Zi *z = new Zi("龙虾");
+
+    Action(f);
+    Action(z);
+
+    return 0;
+}
+
+运行结果：
+D:\cppcode\day06\多态>多态.exe
+fu eat咸菜
+fu eat龙虾
+
+2.使用virtual后：
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class Fu
+{
+public:
+    Fu() {}
+    Fu(string food)
+    {
+        this->food = food;
+    }
+    string food;
+    virtual void eat()
+    {
+        cout << "fu eat" << food << endl;
+    }
+};
+class Zi : public Fu
+{
+public:
+    Zi(string food)
+    {
+        this->food = food;
+    }
+
+    void eat()
+    {
+        cout << "Zi eat " << food << endl;
+    }
+};
+
+void Action(Fu *pf)
+{
+    pf->eat();
+}
+int main(int argc, char const *argv[])
+{
+    Fu *f = new Fu("咸菜");
+    Zi *z = new Zi("龙虾");
+
+    Action(f);
+    Action(z);
+
+    return 0;
+}
+
+运行结果：
+D:\cppcode\day06\多态>多态.exe
+fu eat咸菜
+Zi eat 龙虾
+
+注意：最好在符类的析构函数前面也添加virtual关键字，否则可能会发生内存泄漏。

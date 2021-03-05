@@ -1,0 +1,140 @@
+C++智能指针auto_ptr的原理及使用
+std::auto_ptr
+auto_ptr是C++标准库中(<utility>)为了解决资源泄漏的问题提供的一个智能指针类模板（注意：这只是一种简单的智能指针）
+auto_ptr的实现原理其实就是RAII（Resource Application Immediately Initialize），在构造的时候获取资源，在析构的时候释放资源，并进行相关指针操作的重载，
+使用起来就像普通的指针。
+
+使用auto_ptr作为成员变量，以避免资源泄漏。
+
+为了防止资源泄漏，我们通常在构造函数中申请，析构函数中释放，但是只有构造函数调用成功，析构函数才会被调用，换句话说，如果在构造函数中产生了异常，那么析构
+函数将不会调用，这样就会造成资源泄漏的隐患。
+
+比如，如果该类有2个成员变量，指向两个资源，在构造函数中申请资源A成功，但申请资源B失败，则构造函数失败，那么析构函数不会被调用，那么资源A则泄漏。
+
+为了解决这个问题，我们可以利用auto_ptr取代普通指针作为成员变量，这样首先调用成功的成员变量的构造函数肯定会调用其析构函数，那么就可以避免资源泄漏问题
+
+1、auto_ptr类
+
+auto_ptr是一个模板类，定义如下：
+
+template <typename Type>
+class auto_ptr {...};
+ 
+它存储的是一个指向Type的指针。
+
+顾名思义，auto_ptr是一种智能指针，它包含一个动态分配内存的指针，并在它生命周期结束的时候，销毁包含的指针所指向的内存。
+
+例1：
+
+void f()
+{
+    Type* pt(new Type);
+    //一些代码...
+    delete pt;
+}
+ 
+这样的代码很常见，但它有可能造成内存泄露。首先你用了new，你就要记得用delete，但即使你记住了用delete,还是会出问题。如果f()在执行delete pt之前，就抛出了异常，
+函数返回了。那么这个分配的对象就没被删除。
+
+使用auto_ptr，很优雅的解决了这些问题。
+
+例2：
+
+    void f()
+    {
+          auto_ptr<Type> pt(new Type);
+          //一些代码...
+    }
+ 
+现在的代码，不会泄露Type类型的对象。不管是函数正常结束，还是抛出异常结束，都会调用pt的析构函数，从而删除分配的对象。
+
+2， auto_ptr构造函数
+
+构造函数1：explicit auto_ptr(Type* _Ptr = 0) throw( );
+
+    auto_ptr<int> pt;//包含一个int*的指针，并初始化为NULL
+    auto_ptr<int> pt(new int(123)); //包含一个int*的指针，并初始化为123的地址
+    auto_ptr<int> pt = new int(123); //error!构造函数声明为explicit
+ 
+构造函数2：auto_ptr(auto_ptr<Type>& _Right) throw( );
+
+     int* ptr = new int();
+
+     auto_ptr<int> pt1(ptr); //构造函数1
+
+     auto_ptr<int> pt2(pt1); //将pt1的使用权转给pt2，注意pt1指向NULL了
+                             //pt1调用了本身的release()函数，将内部指针地址传给pt2
+ 
+构造函数3：template<typename Other>
+
+       auto_ptr(auto_ptr<Other>& _Right) throw( );
+1
+声明这样一个拷贝构造函数的目的，就是为了派生类指针能转换成基类的指针。
+
+例：
+
+  class Base { };
+
+  class Derived : public Base { };
+
+  auto_ptr<Derived> pDerived(new Derived);
+
+  auto_ptr<Base>    pBase(pDerived);     //让这样的代码能通过编译器
+       其本质是为了让，auto_ptr类内部的Derived*转换为Base* 
+ 
+构造函数4：auto_ptr(auto_ptr_ref<Type> _Right) throw( );
+
+                    //暂略
+
+3， auto_ptr成员函数
+
+成员函数1：Type* get( ) const throw( );
+
+       获得包含指针的地址
+
+       int* ptr = new int(123);
+
+       auto_ptr<int> pt(ptr);
+
+       assert(pt.get() == ptr); //相等，指向同一地址
+
+成员函数2：Type* release( ) throw( );
+
+       返回包含指针的地址，并将包含指针设为NUll
+
+       string* pstr = new string("hello");
+
+       auto_ptr<string> pt(pstr);
+
+       pt.release();   //不在指向string对象
+
+                      //此时，pt.get()等于NULL
+
+       delete pstr;  //应该手动删除pstr指向的内存块 
+
+ 
+成员函数3：void reset(Type* _Ptr = 0);
+
+      double* pdouble1 = new double(3.14);
+
+      double* pdouble2 = new double(1.23);
+
+      auto_ptr<double> pt1(pdouble1);
+
+      pt1.reset(pdouble2);  //将删除pt1所指向的内存块就是pdouble1指向的那块
+
+                             //此时，pt.get()等于pdouble2
+
+      cout << *pdouble1;   //error,pdouble已经是野指针了           
+ 
+4， 使用总结
+
+1、auto_ptr存储的指针应该为NULL或者指向动态分配的内存块。
+
+2、auto_ptr存储的指针应该指向单一物件（是new出来的，而不是new[]出来的）。
+
+3、两个auto_ptr对象不会同时指向同一块内存块。要明白2个auto_ptr对象赋值会发生什么。
+
+4、千万不要把auto_ptr对象放在容器中。
+
+5、当将auto_ptr作为函数参数时，最好声明为const auto_ptr&(by const ref).当函数返回值可以简单的传值（by value).

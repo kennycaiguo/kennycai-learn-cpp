@@ -1,0 +1,26 @@
+假设由一个函数
+int Add(int a,int )
+{
+ return a+b;
+}
+1.定义一种函数类型：
+typedef int(MY_FUNC)(int,int)
+然后：MY_FUNC *fp=NULL；
+          fp=Add；
+     int res= fp(10,20);
+     cout<<"result="<<res<<endl;
+2.定义一个指向这种函数类型的指针类型
+typedef int(*MY_FUNC_P)(int,int)
+ 使用：
+        MY_FUNC_P fp2=NULL；
+        fp2=Add；
+         int res2= fp(10,20);
+     cout<<"result="<<res2<<endl;
+3.直接定义一个函数指针，然后使用：
+    int(*fp3)(int,int)=NULL;
+    fp3=Add;
+    int res3= fp(10,20);
+    cout<<"result="<<res3<<endl;
+注意：函数指针和普通指针有点不一样，不能进行++运算，也不用*来取值。就个普通函数一样使用。
+在给函数指针赋值的时候，是会发生函数重载匹配的，而且是严格匹配，不存在隐式转换（函数重载是可以存在隐式转换的）。
+在调用函数指针的时候，所调用的函数就已经固定了。

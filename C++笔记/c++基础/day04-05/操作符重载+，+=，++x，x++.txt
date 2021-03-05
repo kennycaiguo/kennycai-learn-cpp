@@ -1,0 +1,103 @@
+操作符重载，就是赋予一个操作符新的含义。格式返回值operater+(参数1，参数2...){},(也可以是其它操作符）
+注意：operator+(类型 a,类型 b)其实是一个函数，只不过它可以写成 a+b的形式。
+
+注意;1.只能堆c++提供的运算符继续重载。
+        2.c++中绝大部分的运算符都是可以重载的。但是成员选择符（.）, 成员对象选择符（.*）,作用域操作符（::）,
+三目运算符（?:）不能够重载。
+.* 操作符：
+如： class A{
+           ...
+           char *p;
+        }；
+        A a;
+        a.*p等价于*(a.p)
+建议一般只重载数学运算符和比较运算符和==。一般来说除了“=”以外基类中重载的运算符都可以被派生类继承。
+
+关于前++和后++的重载问题：
+前++重载后返回类对象的引用，后++返回“const 类对象的引用 ”。所以可以提示继续多级前++运算。但是后++每一次只能进行一次。
+前++的重载，在全局需要一个参数，作为类的成员函数不需要参数，因为是自身++。后++在全局需要2个参数
+作为类的成员函数需要一个占位参数。
+前++的重载实例：
+class Complex
+{
+public:
+	Complex(int a, int b)
+	{
+		this->a = a;
+		this->b = b;
+	}
+	void printComplex()
+	{
+		cout << "(" << this->a << ", " << this->b << "i)" << endl;
+	}
+	 
+	//friend Complex& operator++(Complex& c);
+	 
+	Complex& operator++() //这个是前++
+	{
+		this->a++;
+		this->b++;
+		return *this;
+	}
+private:
+	int a;//复数的实部
+	int b;//复数的虚部
+};
+后++全局 实例：(需要添加友元声明)
+//后++的全局实现,需要一个占位参数
+const Complex operator++(Complex& c, int)
+{
+	Complex tmp(c.a, c.b);
+	c.a++;
+	c.b++;
+	return tmp;
+}
+
+后++的成员方法：
+class Complex
+{
+public:
+	Complex(int a, int b)
+	{
+		this->a = a;
+		this->b = b;
+	}
+	void printComplex()
+	{
+		cout << "(" << this->a << ", " << this->b << "i)" << endl;
+	}
+	friend Complex ComplexAdd(Complex & c1, Complex & c2);
+	//friend Complex operator+(Complex & c1, Complex & c2);
+	//friend Complex& operator+=(Complex& c1, Complex& c2);
+	//friend Complex& operator++(Complex& c);
+	//friend const Complex operator++(Complex& c, int);
+	Complex operator+(Complex & c2)
+	{
+		Complex total(this->a + c2.a, this->b + c2.b);
+		return total;
+	}
+	Complex& operator+=( Complex& c2)
+	{
+		this->a += c2.a;
+		this->b += c2.b;
+		return *this;
+	}
+                 //前++成员方法
+	Complex& operator++() //这个是前++
+	{
+		this->a++;
+		this->b++;
+		return *this;
+	}
+	//后++的成员方法
+	const Complex operator++(int)
+	{
+		Complex tmp(this->a, this->b);
+		this->a++;
+		this->b++;
+		return tmp;
+	}
+private:
+	int a;//复数的实部
+	int b;//复数的虚部
+};

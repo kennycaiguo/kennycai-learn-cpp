@@ -1,0 +1,28 @@
+父类的可以接收子对象进行初始化。
+子类不可以接受父类的对象进行初始化。
+如：
+class Father
+{
+   public：
+    int a；
+}；
+
+class son：public Father
+{
+   public：
+    int b；
+}；
+Son s；
+Father f=s； //ok，因为s is f ，子类是父类
+
+Father f2;
+Son s2=f2；//报错，原因：子类的空间比父类大。f 不是 s
+
+Father *fp=&s //ok
+Son *sp=&f //报错
+
+子类对象可以当作父类对象使用
+子类对象可以直接赋值给父类对象
+子类对象可以直接初始化父类对象
+父类指针可以直接指向子类对象
+父类的引用可以直接引用子类对象

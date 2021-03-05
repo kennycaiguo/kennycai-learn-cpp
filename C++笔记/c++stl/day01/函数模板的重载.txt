@@ -1,0 +1,15 @@
+函数模板是可以重载的。
+当一个普通函数和一个函数模板都能匹配时，优先使用普通函数，如果想规定她使用模板，只需要在函数名字后面
+加<>就可以了。不过一般不这么做。
+函数模板重载的例子：
+template<typename T>
+void Print(T& a)
+{
+	cout << a << endl;
+}
+
+template<typename T>
+void Print(T& a,T& b)
+{
+	cout << a << " "<< b << endl;
+}

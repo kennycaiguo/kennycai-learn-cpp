@@ -1,0 +1,144 @@
+c++在c语言的基础是拓展了引用的概念。
+所谓引用，就是给一个变量起别名，也就是说变量的引用和变量是同一个内存空间，
+修改任何一个就会改变另外一个。
+
+语法：变量类型  &变量名=被引用的变量，注意：&在“=”的左边引用声明一个变量的引用
+&在“=”的右边表示取变量的地址
+如：
+int a=100; //声明一个变量a并且初始化为100；
+int &ref=a; //声明一个名叫ref的变量a的引用，它和a的内存空间是同一个
+引用规则：1.引用没有定义，是一种更新声明。所以引用的类型和源类型保持一致并且
+                    不分配内存。
+                2.引用在声明时必须初始化，一旦声明，包括变更。
+                3.可以对引用再次引用，多次引用的结果是某一变量有多个别名。
+                4.&符号前面有数据类型时，是引用，其它情况均是取地址。
+实例：
+int main(int argc, char const *argv[])
+{
+    int a = 100;
+    int b = 30;
+    int &ref = a;
+    cout << "a=" << a << endl;
+    cout << "ref=" << ref << endl;
+    ref = 200;
+    cout << "a=" << a << endl;
+    cout << "ref=" << ref << endl;
+    a = 50;
+    cout << "a=" << a << endl;
+    cout << "ref=" << ref << endl;
+    int *p = &ref;
+    *p = 150;
+    cout << "a=" << a << endl;
+    cout << "ref=" << ref << endl;
+    //---------------------
+    ref = b;
+    cout << "a=" << a << endl;
+    ref = 70;
+    cout << "b=" << b << endl;
+    int &rref = ref;
+    rref = 80;
+    cout << "a=" << a << endl;
+    cout << "ref=" << ref << endl;
+    return 0;
+}
+
+
+运行结果：
+D:\cppcode\day01\refdemo>ref
+a=100
+ref=100
+a=200
+ref=200
+a=50
+ref=50
+a=150
+ref=150
+a=30
+b=30
+a=80
+ref=80
+
+引用的应用场景，和指针的作用类似，可以通过形参修改实参的值
+如：
+#include <iostream>
+using namespace std;
+//reference
+void swapvalue(int &a, int &b)
+{
+    int tmp = 0;
+    tmp = a;
+    a = b;
+    b = tmp;
+}
+
+int main(int argc, char const *argv[])
+{
+    int a = 100;
+    int b = 30;
+     
+    cout << "=====================before swap=============" << endl;
+    cout << "a=" << a << ",b=" << b << endl;
+    swapvalue(a, b);
+    cout << "=====================after swap=============" << endl;
+    cout << "a=" << a << ",b=" << b << endl;
+    return 0;
+}
+
+结果：
+=====================before swap=============
+a=100,b=30
+=====================after swap=============
+a=30,b=100
+
+引用还有一个好处，如果需要输出一个非常大的数据类型，里面有很多成员，
+把它转为函数参数时，最好不要使用值传递，这样子效率太低，最好使用指针或引用传递。
+
+还可以对指针类型变量取引用：如：
+int a=20;
+int* p=&a;
+int* &rp=p；
+
+指针引用实例：
+#include <iostream>
+#include <string.h>
+using namespace std;
+struct teacher
+{
+    int id;
+    char name[100];
+};
+int createTeacher(teacher *&rth)
+{
+    rth = (teacher *)malloc(sizeof(teacher));
+    rth->id = 100;
+    strcpy(rth->name, "Joe biden");
+    return 0;
+}
+void free_buf(teacher *&rth)
+{
+    if (rth == NULL)
+    {
+        return;
+    }
+    free(rth);
+    rth = NULL;
+}
+
+int main(int argc, char const *argv[])
+{
+    teacher *pth = NULL;
+    createTeacher(pth);
+    cout << "id=" << pth->id << ",name=" << pth->name << endl;
+    free_buf(pth);
+    return 0;
+}
+
+常量引用：
+对常量取引用，其引用变量也必须是const修饰的，否则不兼容
+如：
+ const int c=100;
+ const int &rc=c;
+注意：可以使用const 类型引用来引用普通变量
+如：
+  int b=100;
+  const int &rb=b; //这个是ok的
