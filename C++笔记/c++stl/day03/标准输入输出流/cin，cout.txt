@@ -1,0 +1,163 @@
+cin常用方法：
+操作符>>,
+cin.get()
+cin.get(char ch) //会取走缓冲区字符
+cin.get(char* buf,int len)
+cin.getline(char* buf,int len)
+cin.ignore():忽略（跳过）当前字符
+cin.peek() //只是去偷看（读取），并不会取走缓冲区的字符
+cin.putback()可以和get()一起使用，作用把get取走的放回缓冲区。
+
+cout常见方法：
+cout.flash() //刷新缓冲区，endl就有这个作用。如果不刷新，数据不会马上显示到屏幕。
+cout.put() //输出字符，可以支持链式编程。
+cout.write() //输出字符串。
+cout.width(n)
+cout.fill()
+cout.setf(标记)
+
+操作符<<
+1.cout.precision(n); 这个方法的功能是，设置精度为n，返还值是上一次的设置精度。
+#include <iostream> 
+using namespace std; 
+int main () 
+{ 
+  float a;
+  cin>>a;
+  cout<<"上一次的精度设置值："<<cout.precision(3)<<endl;
+  cout<<"设置精度后："<<a;
+  return 0;
+}
+ 
+输入：1.2456
+上一次的精度设置值：6
+设置精度后：1.25
+　　
+2.cout.width(); 将显示当前的字段宽度，默认为0。cout.width(n); 就是把字段的宽度设置为n。
+#include <iostream> 
+using namespace std; 
+int main () 
+{ 
+  int a;
+  cin>>a;
+  cout.width(10);
+  cout<<a<<endl;
+  cout<<cout.width();
+  return 0;
+}
+ 运行结果：
+12
+        12
+0
+3.cout.fill(ch);  它的功能是用ch来替代原有的填充字符。  这个和cout.width(); 有一个明显的不同就是在它设置之
+后就会一直保持这个值不会恢复最初的状态，同样的都会返回上一次设置后的填充字符。
+#include <iostream> 
+using namespace std; 
+int main () 
+{ 
+  int a;
+  char ch='*';
+  cin>>a;
+  cout.fill(ch);
+  cout.width(5);
+  cout<<a<<endl;
+  cout<<cout.fill();
+}
+ 运行结果：
+输入：12
+输出：***12
+输出：*
+
+4.flags(fmtfl)	
+当前格式状态全部替换为 fmtfl。注意，fmtfl 可以表示一种格式，也可以表示多种格式。
+
+5.setf(fmtfl, mask)	在当前格式的基础上，追加 fmtfl 格式，并删除 mask 格式。其中，mask 参数可以省略。
+
+6.unsetf(mask)	在当前格式的基础上，删除 mask 格式。
+
+7.tellp() 成员方法用于获取当前输出流缓冲区中最后一个字符所在的位置，其语法格式如下
+streampos tellp();
+
+8.cout.put() 方法向 test.txt 文件中写入指定字符
+举个例子：
+#include <iostream> //cin 和 cout
+#include <fstream> //文件输入输出流
+int main() {
+    //定义一个文件输出流对象
+    std::ofstream outfile;
+    //打开 test.txt，等待接收数据
+    outfile.open("test.txt");
+    const char * str = "http://c.biancheng.net/cplus/";
+    //将 str 字符串中的字符逐个输出到 test.txt 文件中，每个字符都会暂时存在输出流缓冲区中
+    for (int i = 0; i < strlen(str); i++) {
+        outfile.put(str[i]);
+        //获取当前输出流
+        long pos = outfile.tellp();
+        std::cout << pos << std::endl;
+    }
+    //关闭文件之前，刷新 outfile 输出流缓冲区，使所有字符由缓冲区流入test.txt文件
+    outfile.close();
+    return 0;
+}
+运行此程序，其输出结果为 1~29。这意味着，程序中每次向输出流缓冲区中放入字符时，pos 都表示的是当前
+字符的位置。比如，当将 str 全部放入缓冲区中时，pos 值为 29，表示的是最后一个字符 '/' 位于第 29 个位置处。
+
+9.seekp() 方法用于指定下一个进入输出缓冲区的字符所在的位置。
+
+举个例子，假设当前输出缓冲区中存有如下数据：
+http://c.biancheng.net/cplus/
+
+借助 tellp() 方法得知，最后一个 '/' 字符所在的位置是 29。此时如果继续向缓冲区中存入数据，则下一个字符所在的位置应该是 30，但借助 seekp() 方法，我们可以手动指定下一个字符存放的位置。
+
+比如通过 seekp() 指定下一个字符所在的位置为 23，即对应 "cplus/" 部分中字符 'c' 所在的位置。此时若再向缓冲区中存入 "python/"，则缓冲区中存储的数据就变成了：
+http://c.biancheng.net/python/
+
+显然，新的 "python/" 覆盖了原来的 "cplus/"。
+
+seekp() 方法有如下 2 种语法格式：
+//指定下一个字符存储的位置
+ostream& seekp (streampos pos);
+//通过偏移量间接指定下一个字符的存储位置   
+ostream& seekp (streamoff off, ios_base::seekdir way);
+其中，各个参数的含义如下：
+pos：用于接收一个正整数；、
+off：用于指定相对于 way 位置的偏移量，其本质也是接收一个整数，可以是正数（代表正偏移）或者负数（代表负偏移）；
+way：用于指定偏移位置，即从哪里计算偏移量，它可以接收表 1 所示的 3 个值。
+
+表 1 文件定位标志
+模式标志	描 述
+ios::beg	从文件头开始计算偏移量
+ios::end	从文件末尾开始计算偏移量
+ios::cur	从当前位置开始计算偏移量
+同时，seekp() 方法会返回一个引用形式的 ostream 类对象，这意味着 seekp() 方法可以这样使用：
+cout.seekp(23) << "当前位置为：" << cout.tellp();
+举个例子：
+#include <iostream> //cin 和 cout
+#include <fstream> //文件输入输出流
+using namespace std;
+int main() {
+    //定义一个文件输出流对象
+    ofstream outfile;
+    //打开 test.txt，等待接收数据
+    outfile.open("test.txt");
+    const char * str = "http://c.biancheng.net/cplus/";
+    //将 str 字符串中的字符逐个输出到 test.txt 文件中，每个字符都会暂时存在输出流缓冲区中
+    for (int i = 0; i < strlen(str); i++) {
+        outfile.put(str[i]);
+        //获取当前输出流
+       
+    }
+    cout << "当前位置为：" << outfile.tellp() << endl;
+    //调整新进入缓冲区字符的存储位置
+    outfile.seekp(23);  //等价于：
+                        //outfile.seekp(23, ios::beg);
+                        //outfile.seekp(-6, ios::cur);
+                        //outfile.seekp(-6, ios::end);
+   
+    cout << "新插入位置为:" << outfile.tellp() << endl;
+    const char* newstr = "python/";
+    outfile.write("python/", 7);
+    //关闭文件之前，刷新 outfile 输出流缓冲区，使所有字符由缓冲区流入test.txt文件
+    outfile.close();
+    return 0;
+}

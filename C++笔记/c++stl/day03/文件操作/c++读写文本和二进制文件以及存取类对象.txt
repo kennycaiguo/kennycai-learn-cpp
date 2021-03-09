@@ -1,0 +1,134 @@
+c++的fstream类功能强大，可以处理文本，zip，jpg，png，mp3,wmv格式的文件以及可以将类对象保存到
+文件和可以从文件中读取类对象信息。下面是一个实例：
+
+ #define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include<fstream>
+#include <sstream>
+
+using namespace std;
+//文本文件读写,实现文件拷贝
+void testTxtOp()
+{
+	/*ofstream ofs;
+	ofs.open("target.txt", ios::out);*/
+	/*ifstream ifile;
+	ifile.open("source.txt", ios::in);*/
+	ifstream ifile("source.txt", ios::in); //使用带参构造；
+	if (!ifile)
+	{
+		cout << "Open file failed" << endl;
+		return;
+	}
+	char buf[256];
+	/*while (!ifile.eof()) //这种写法不太好，会多输出一个空的文件内容为：，不好看
+	{
+      ifile.getline(buf,256);
+	  cout << "文件内容为：" << buf << endl;
+	}*/
+	ofstream ofs("target.txt", ios::out);
+	while (ifile.getline(buf, 256))
+	{
+		//cout << "文件内容为：" << buf << endl;
+		ofs<< buf << endl;
+	}
+	ifile.close();
+	ofs.close();
+	cout << "复制完成" << endl;
+}
+
+//二进制复制，zip,jpg,wmv,png,mp3,ok,mp4不行
+void testBinOp()
+
+{
+	//char *filename = "F:\\etcd-3.4.13.zip";
+	char *filename = "D:\\pic\\1.wmv";
+	//char *filename = "D:\\1012.MP3";
+	
+	ofstream ofs("target.rm", ios::out|ios::binary);
+	ifstream ifile(filename, ios::in|ios::binary); //使用带参构造；
+	if (!ifile)
+	{
+		cout << "Open file failed" << endl;
+		return;
+	}
+	char buf[256];
+	while (ifile.read(buf,256))
+	{
+		ofs.write(buf, 256);
+	}
+	ifile.close();
+	ofs.close();
+	cout << "Copy completed!" << endl;
+}
+
+//将对象保存到文件以及从文件里读取对象
+class Person
+{
+public:
+	Person(){}
+	Person(string name, int age) :name(name), age(age){}
+	void showInfo()
+	{
+		cout << "Person[name:" << name << ",age:" << age << "]" << endl;
+	}
+public:
+	string name;
+	int age;
+};
+void testWriteObj()
+{
+    //把对象写进文件
+	Person p1("jack", 20), p2("mary", 22);
+	
+	ofstream ofs("persons.txt", ios::out|ios::binary);
+	ofs.write((char*)&p1,sizeof(Person));
+	ofs.write((char*)&p2,sizeof(Person));
+	ofs.close();
+	
+	
+}
+void testReadObj()
+{
+	//从文件里把对象读取出来
+	ifstream ifs("persons.txt", ios::in | ios::binary);
+	/*Person *pp1=new Person , *pp2=new Person ;
+	ifs.read((char*)pp1, sizeof(Person));
+	ifs.read((char*)pp2, sizeof(Person));
+	ifs.close();
+	cout << "name:" << ((Person*)pp1)->name << ",age: " << ((Person*)pp1)->age << endl;
+	cout << "name:" << ((Person*)pp2)->name << ",age: " << ((Person*)pp2)->age << endl;*/
+	Person *pp1=new Person , *pp2=new Person ;
+	char* pc1 = new char[sizeof(Person)];
+	char* pc2 = new char[sizeof(Person)];
+	ifs.read(pc1, sizeof(Person));
+	ifs.read(pc2, sizeof(Person));
+	pp1 = (Person*)pc1;
+	pp2 = (Person*)pc2;
+	ifs.close();
+	cout << "name:" << pp1->name << ",age: " << pp1->age << endl;
+	cout << "name:" << pp2->name << ",age: " << pp2->age << endl;
+	 
+	/*char* pch1 = new char[sizeof(Person)];//也ok
+	char* pch2 = new char[sizeof(Person)];
+	Person per1, per2;
+	ifs.read(pch1, sizeof(Person));
+	ifs.read(pch2, sizeof(Person));
+	
+	per1 = *(Person*)pch1;
+	per2 = *(Person*)pch2;
+	per1.showInfo();
+	per2.showInfo();*/
+	ifs.close();
+}
+int main(int argc, char const *argv[])
+{
+	//testTxtOp();
+	//testBinOp();
+	//testWriteObj();
+	testReadObj();
+	system("pause");
+
+	return 0;
+}

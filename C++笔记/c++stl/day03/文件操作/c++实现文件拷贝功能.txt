@@ -1,0 +1,37 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include<fstream>
+#include <sstream>
+
+using namespace std;
+//文本文件读写,实现文件拷贝
+void testTxtOp()
+{
+	ifstream ifile;
+	ofstream ofs;
+	ifile.open("source.txt", ios::in);
+	char buf[256];
+	/*while (!ifile.eof())//这种写法不太好，会多输出一个空的文件内容为：，不好看
+	{
+      ifile.getline(buf,256);
+	  cout << "文件内容为：" << buf << endl;
+	}*/
+	ofs.open("target.txt", ios::out);
+	while (ifile.getline(buf, 256)) 
+	{
+		//cout << "文件内容为：" << buf << endl;
+		ofs<< buf << endl;
+	}
+	ifile.close();
+	ofs.close();
+	cout << "复制完成" << endl;
+}
+
+int main(int argc, char const *argv[])
+{
+	testTxtOp();
+
+	system("pause");
+	return 0;
+}
