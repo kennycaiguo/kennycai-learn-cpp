@@ -1,0 +1,120 @@
+vector是一个容器，它是一个动态数组，由begin()和end()迭代器，可以遍历容器中的元素，可以存放任意类型
+数据，包括基本类型和自定义类型。
+vector实例：
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include<algorithm>
+ 
+using namespace std;
+//void testintVecor()
+//{
+//	vector<int> v;
+//	for (size_t i = 0; i < 10; i++)
+//	{
+//       v.push_back(i*2-1);
+//	}
+//	cout << "the size of the vector is:" << v.size() << endl;
+//	for (size_t i = 0; i < v.size(); i++)
+//	{
+//		cout << v.at(i) << "  ";
+//	}
+//	cout << endl;
+//	 
+//}
+void printVector(int v) //这是一个回调函数
+{
+	cout << v<<" ";
+}
+
+void testintVecor()
+{
+	vector<int> v;
+	for (size_t i = 0; i < 10; i++)
+	{
+		v.push_back(i * 2 - 1);
+	}
+	cout << "the size of the vector is:" << v.size() << endl;
+	 //利用stl提供的for_each算法
+	//获取vector容器的迭代器：
+	vector<int>::iterator pBegin=v.begin();
+	vector<int>::iterator pEnd = v.end();
+	for_each(pBegin, pEnd, printVector);
+
+}
+
+class Person
+{
+public:
+	Person(){}
+	Person(string name, int age) :name(name), age(age){}
+	void showInfo()
+	{
+		cout << "Person[name:" << name << ",age:" << age << "]" << endl;
+	}
+
+public:
+	string name;
+	int age;
+};
+void printpv(Person v)
+{
+	v.showInfo();
+}
+//void testClsVector1()
+//{
+//	vector<Person> v;
+//	v.push_back(Person("Jack", 20));
+//	v.push_back(Person("Jade", 22));
+//	v.push_back(Person("Mary", 19));
+//	v.push_back(Person("Matha", 21));
+//	for_each(v.begin(), v.end(), printpv);
+//}
+void testClsVector2()
+{
+	vector<Person> v;
+	v.push_back(Person("Jack", 20));
+	v.push_back(Person("Jade", 22));
+	v.push_back(Person("Mary", 19));
+	v.push_back(Person("Matha", 21));
+	for (vector<Person>::iterator it = v.begin(); it != v.end(); it++)
+	{
+		it->showInfo();
+	}
+}
+void testClsVector3()
+{
+	vector<Person> v;
+	v.push_back(Person("Jack", 20));
+	v.push_back(Person("Jade", 22));
+	v.push_back(Person("Mary", 19));
+	v.push_back(Person("Matha", 21));
+	for (vector<Person>::iterator it = v.begin(); it != v.end(); it++)
+	{
+		(*it).showInfo();
+	}
+}
+void printpvPtr(Person* v)
+{
+	v->showInfo();
+}
+void testClsPtrVector()
+{
+	vector<Person*> v;
+	v.push_back(new Person("Jack", 20)); //使用new比对一个对象取地址好
+	v.push_back(new Person("Jade", 22));
+	v.push_back(new Person("Maria", 19));
+	v.push_back(new Person("Maphew", 21));
+	for_each(v.begin(), v.end(), printpvPtr);
+}
+
+int main(int argc, char const *argv[])
+{
+	//testintVecor();
+	//testClsVector3();
+	testClsPtrVector();
+	system("pause");
+	return 0;
+}

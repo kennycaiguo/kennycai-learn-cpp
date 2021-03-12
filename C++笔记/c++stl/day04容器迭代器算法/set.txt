@@ -1,0 +1,220 @@
+set是基于二叉树的一种数据结构。它们有自动排序功能。其中，set不允许由重复元素。
+不可以使用set的迭代器来修改set中元素的值，这样子会破坏set的结构。如果需要修改某一元素的值，
+只能先删除该元素，然后再添加新值。set的自动排序默认是按照从小到大的顺序。如果需要set从大到小排序，
+必须自己实现一个防函数。把它作为set的构造方法中的第二个参数。
+set简单实例：
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <set>
+#include <unordered_set>
+#include <algorithm>
+#include <sstream>
+
+using namespace std;
+void printSet(set<int> s)
+{
+	for (set<int>::iterator it = s.begin(); it != s.end(); it++)
+	{
+		cout << *it << " ";
+	}
+	cout << endl;
+}
+//防函数，其实它是一个类
+class mycompare{
+public:
+	bool operator()(int v1,int v2){
+		return v1 > v2;
+	}
+};
+
+void testset1()
+{
+	set<int> s;
+	//自动排序
+	s.insert(20);
+	s.insert(10);
+	s.insert(5);
+	
+	printSet(s);
+	//添加元素
+	/**/
+	 
+
+}
+//set默认是自动排序的，而且默认从小到大排序，如果需要从大到小排序，必须使用防函数作为第二个参数
+void reverseSort()
+{
+	//创建具有从大到小排序功能的set
+	set<int, mycompare> s;
+	s.insert(1);
+	s.insert(10);
+	s.insert(20);
+	s.insert(30);
+	for (set<int, mycompare>::iterator it = s.begin(); it != s.end(); it++)
+	{
+		cout << *it << " ";
+	}
+	cout << endl;
+
+}
+void testSetFind()
+{
+	set<int> s;
+	for (size_t i = 0; i < 5; i++)
+	{
+		s.insert(i * 2);
+	}
+	//查找功能
+	set<int>::iterator it=s.find(5);
+	if (it != s.end())
+	{
+		cout << "找到了。。。" << endl;
+		cout << *it << endl;
+	}
+	else{
+		cout << "没找到。。。" << endl;
+	}
+}
+void testSetLower_bound()
+{
+
+	set<int> s;
+	for (size_t i = 0; i < 5; i++)
+	{
+		s.insert(i * 2);
+	}
+	//查找功能:lowet_bound(elem)返回>=elem的第一个迭代器,也就是有和elem相等的就找相等的，没有的话就找第一个对于elem的
+	set<int>::iterator it = s.lower_bound(3);
+	if (it != s.end())
+	{
+		cout << "reasult:" << endl;
+		cout << *it << endl;
+	}
+}
+
+void testSetUpper_bound()
+{
+
+	set<int> s;
+	for (size_t i = 0; i < 5; i++)
+	{
+		s.insert(i * 2);
+	}
+	//查找功能:lowet_bound(elem)返回>elem的第一个迭代器。只找大于的。
+	set<int>::iterator it = s.upper_bound(3);
+	if (it != s.end())
+	{
+		cout << "reasult:" << endl;
+		cout << *it << endl;
+	}
+}
+void testSetEqual_range()
+{
+
+	set<int> s;
+	for (size_t i = 0; i < 5; i++)
+	{
+		s.insert(i * 2);
+	}
+ 
+	pair<set<int>::iterator, set<int>::iterator> p = s.equal_range(4);
+	if (p.first == s.end())
+	{
+		cout << "没有找到。。。" << endl;
+	}
+	else
+	{
+		cout << "first:" << *p.first << endl;
+	}
+	if (p.second == s.end())
+	{
+		cout << "没有找到。。。" << endl;
+	}
+	else
+	{
+		cout << "second:" << *p.second << endl;
+	}
+	//set<int>::iterator first = p.first;
+	//set<int>::iterator second = p.second;
+	//cout << "[first:" << *first << ",second:" << *second << "]"<<endl;
+	 
+	
+	 
+	 
+}
+
+void testPair()
+{
+	//构造方法一
+	pair<string, int> p("jack", 28);
+	cout << "first：" << p.first << ",second:" << p.second << endl;
+	cout << "==========================================" << endl;
+	//构造方法二
+	pair<string, int> p2 = make_pair(string("Mary"), 20);
+	cout << "first：" << p2.first << ",second:" << p2.second << endl;
+	cout << "==========================================" << endl;
+	//构造方法三,拷贝构造函数
+	pair<string, int> p3(p);
+	cout << "first：" << p3.first << ",second:" << p3.second << endl;
+	cout << "==========================================" << endl;
+	//赋值操作
+	pair<string, int> p4 = p2;
+	cout << "first：" << p4.first << ",second:" << p4.second << endl;
+}
+int main(int argc, char const *argv[])
+{
+	//testset1();
+	//testSetFind();
+	//testSetLower_bound();
+	//testSetUpper_bound();
+	//testSetEqual_range();
+	//testPair();
+	reverseSort();
+	system("pause");
+	return 0;
+}
+
+注意：利用set来存储类对象时，必须自己实现一个防函数。把它作为set的构造方法中的第二个参数。
+否则会报错。利用迭代器输出类对象是，由于这个迭代器是常量迭代器，需要利用const_cast<类>(*iterator)
+的方式将去转换为普通类对象，然后才能调用类的方法。
+如：
+class Person
+{
+public:
+	Person(){}
+	Person(string name, int age) :name(name), age(age){}
+	void show(){
+		cout << "Person[name:" << name << ",age:" << age << "]"<<endl;
+	}
+ 
+public:
+	string name;
+	int age;
+};
+
+class PersonCompare
+{
+public:
+	bool operator()(Person p1, Person p2)
+	{
+		return p1.age > p2.age;
+	}
+};
+void testSetwithCostumClass()
+{
+	//将对象放入set时，必须指定排序方法，因为set默认是排序的，它不知道怎么对对象排序
+	set<Person,PersonCompare> sp;
+	Person p1("Milke", 20), p2("Jesse", 18), p3("Jose Maria", 19);
+	sp.insert(p1);
+	sp.insert(p2);
+	sp.insert(p3);
+	for (set<Person, PersonCompare>::iterator it = sp.begin(); it != sp.end(); it++)
+	{
+		//方式一、
+		//cout << "Person[name:" << (*it).name << ",age:" << (*it).age << "]" << endl;
+		//方式二、
+		//(*it)不能调用方法？因为它是常指针需要使用const_cast<>转换
+		const_cast<Person&>((*it)).show();
+	}
+}

@@ -1,0 +1,151 @@
+list容器是一个双向链表。具有双向迭代器，可以++，ky--。但是不支持[]，+=，-=，>,<,p+i,p-i...
+不能随机访问元素。
+有begin(),end(),也有rbegin(),rend()
+//利用正向迭代器
+void printList(list<int>& ls)
+{
+	for (list<int>::iterator it = ls.begin(); it != ls.end(); it++)
+	{
+		cout << *it << " ";
+	}
+	cout << endl;
+}
+//利用反向迭代器
+void printListRev(list<int>& ls)
+{
+	for (list<int>::reverse_iterator it = ls.rbegin(); it != ls.rend(); it++)
+	{
+		cout << *it << " ";
+	}
+	cout << endl;
+}
+  
+
+list容器的使用实例：
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <list>
+#include <algorithm>
+#include <sstream>
+
+using namespace std;
+void printList(list<int>& ls)
+{
+	for (list<int>::iterator it = ls.begin(); it != ls.end(); it++)
+	{
+		cout << *it << " ";
+	}
+	cout << endl;
+}
+void printListRev(list<int>& ls)
+{
+	for (list<int>::reverse_iterator it = ls.rbegin(); it != ls.rend(); it++)
+	{
+		cout << *it << " ";
+	}
+	cout << endl;
+}
+ 
+void test1()
+{
+	//构造对象
+	list<int> l;
+	l.push_back(10);
+	l.push_front(20);
+	l.push_back(40);
+	l.push_front(30);
+	printList(l);
+	cout << "======================================" << endl;
+	list<int>l2(l.begin(),--l.end());
+	cout << "size of l2:" << l2.size() << endl;;
+	printList(l2);
+	list<int> l3(l2);
+	l3.push_back(50);
+	cout << "list3:" << endl;
+	printList(l3);
+	cout << "list3 reverse:" << endl;
+	printListRev(l3);
+	l3.insert(++++l3.begin(), 60);
+	printList(l3);
+	l3.pop_front();
+	printList(l3);
+	l3.pop_back();
+	printList(l3);
+	l2.insert(++l2.begin(), l3.begin(), l3.end());//将整l3的元素插入到l2第二个元素的位置
+	printList(l2);
+}
+void test2(){
+	//构造对象
+	list<int> l;
+	l.push_back(10);
+	l.push_front(20);
+	l.push_back(40);
+	l.push_front(30);
+	l.push_back(40);
+	l.push_front(30);
+	l.push_back(40);
+	l.push_front(30);
+	//list的新方法remove：删除所有匹配项
+	cout << "before remove:" << endl;
+	printList(l);
+	l.remove(30);
+	cout << "after remove:" << endl;
+	printList(l);
+	cout << "=====================================================" << endl;
+	l.insert(l.begin(), 33);
+	l.push_front(44);
+	cout << "before erase:" << endl;
+	printList(l);
+	//删除一个区间的元素
+	l.erase(++++l.begin(), ----l.end());
+	cout << "after erase:" << endl;
+	printList(l);
+}
+void test3()
+{
+	list<int> l;
+	l.push_back(10);
+	l.push_front(20);
+	l.push_back(40);
+	l.push_front(30);
+	l.push_back(40);
+	//list的反转：reverse方法
+	cout << "before reverse:" << endl;
+	printList(l);
+	l.reverse();
+	cout << "after reverse:" << endl;
+	printList(l);
+}
+bool mycompare(int a,int b)
+{
+	return a > b;
+}
+void test4()
+{
+	list<int> l;
+	l.push_back(10);
+	l.push_front(20);
+	l.push_back(40);
+	l.push_front(30);
+	l.push_back(40);
+	//list容器自己有一个sort方法，其它容器很多都没有,默认从小到大
+	cout << "before list.sort:" << endl;
+	printList(l);
+	l.sort();
+	cout << "after list.sort:" << endl;
+	printList(l);
+	//利用自定义规则实现降序排列
+	cout << "降序排列t:" << endl;
+	l.sort(mycompare);
+	printList(l);
+}
+int main(int argc, char const *argv[])
+{
+	//test1();
+	/*test2();*/
+	/*test3();*/
+	test4();
+	system("pause");
+	return 0;
+}

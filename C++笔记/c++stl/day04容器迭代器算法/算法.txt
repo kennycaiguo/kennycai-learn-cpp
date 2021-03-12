@@ -1,0 +1,145 @@
+算法是指通过有限的步骤，解决问题。它或大或小，或多或少解决程序中遇到的问题。
+算法中有一个sort()函数可以对默认数据类型进行排序，如果需要对自定义类型进行排序，必须编写排序规则
+注意：算法中的sort方法只能支持可以随机访问元素的容器，也就是说sort不支持list容器。所以list容器有自己的
+sort方法。
+实例：
+给5个选手打10次分，去除最高分和最低分，然后安装平均分排序输出：
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include<deque>
+#include <algorithm>
+#include <sstream>
+
+using namespace std;
+class Player{
+public:
+	Player(){}
+	Player(string name, int score)
+	{
+		this->name = name;
+		this->score = score;
+	}
+	bool operator>(Player& p)
+	{
+		if (this->score > p.score)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	bool operator<(Player& p)
+	{
+		if (this->score < p.score)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	void showInfo()
+	{
+		cout << "name:" << this->name << ",score:" << this->score << endl;
+	}
+public:
+	string name;
+	int score;
+};
+//创建选手
+void createPlayers(vector<Player>& v)
+{
+	string nameSeed = "ABCDE";
+	for (size_t i = 0; i < 5; i++)
+	{
+		Player p;
+		p.name = "选手";
+		p.name += nameSeed[i];
+		p.score = 0;
+		v.push_back(p);
+	}
+
+}
+
+ 
+void printScore(int s)
+{
+	cout << s << " ";
+}
+
+int getDequeAve(deque<int>& d)
+{
+	int sum = 0;
+	for (deque<int>::iterator it = d.begin(); it != d.end(); it++)
+	{
+		sum += (*it);
+	}
+	return sum / d.size();
+}
+
+//打分
+void setScore(vector<Player>& v)
+{
+	deque<int> dScore;
+	for (vector<Player>::iterator it = v.begin(); it != v.end(); it++)
+	{
+		//大10次分
+		for (int i = 0; i < 10; i++)
+		{
+			int score = rand() % 41 + 60;
+			dScore.push_back(score);
+		}
+		//排序，
+		sort(dScore.begin(), dScore.end());
+		/*for_each(dScore.begin(), dScore.end(), printScore);
+		cout << endl;*/
+		//去除最大最小值
+		dScore.pop_front();
+		dScore.pop_back();
+		
+		//求平均分
+		int avgScore = getDequeAve(dScore);
+		//给选手打分
+		it->score = avgScore;
+	}
+}
+
+//自定义类型必须写排序规则
+bool myCompare(Player p1, Player p2)
+{
+	return p1.score > p2.score;
+}
+
+ //根据选手分数排序,sort算法默认是从小到大，我们要从大到小
+void printRank(vector<Player>& v)
+{
+	//排序
+	sort(v.begin(), v.end(),myCompare);
+	for (vector<Player>::iterator it = v.begin(); it != v.end(); it++)
+	{
+		it->showInfo();
+	}
+
+}
+void printRank2(vector<Player>& v)
+{
+	//sort(v.begin(), v.end());
+	for (vector<Player>::iterator it = v.begin(); it != v.end(); it++)
+	{
+		it->showInfo();
+	}
+}
+int main(int argc, char const *argv[])
+{
+	vector<Player> vPlist;
+	createPlayers(vPlist);
+	setScore(vPlist);
+	printRank(vPlist);
+	system("pause");
+	return 0;
+}

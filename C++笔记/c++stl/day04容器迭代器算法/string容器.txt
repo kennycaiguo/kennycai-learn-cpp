@@ -1,0 +1,26 @@
+string是一个封装了char* 的类。是一个char*的容器。
+string有很多方法，如find，delete，replace，insert等等。
+string类帮我们解决了char* 的复制越界和取值越界的问题。
+string和char* 是可以相互转换的：
+char* ->string: 
+  char *p="hello string";
+  string str=p;
+
+string->char *:
+char ch[20];
+string s="123456";
+strcpy(ch,s.c_str());
+
+string-->char[]
+
+string pp = "dagah";
+ char p[8];
+ int i;
+ for( i=0;i<pp.length();i++)
+    p[i] = pp[i];
+  p[i] = '\0';
+ printf("%s\n",p);
+ cout<<p;
+
+char[] 转string:
+直接赋值即可。
