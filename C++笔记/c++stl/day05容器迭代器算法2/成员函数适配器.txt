@@ -1,0 +1,52 @@
+mem_fun: 将类的成员函数转为回调函数传入for_each等全局算法函数中。
+mem_fun_ref: 将类的成员函数转为回调函数传入for_each等全局算法函数中。
+格式：for_each(v.begin(), v.end(), mem_fun_ref(&Person::showInfo));
+回调函数格式：mem_fun_ref(&类名::函数名)
+其中v是一个vector<Person>对象。Person是一个类。它有一个showInfo方法。
+注意：如果vector存放的是对象指针，使用mem_fun来转换，
+          如果vector存放的是对象，使用mem_fun_ref来转换，括号里面的回调函数格式相同
+实例：
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
+#include<functional>
+#include <time.h>
+#include<stdlib.h>
+#include <algorithm>
+#include <sstream>
+
+using namespace std;
+
+class Person
+{
+public:
+	Person(){}
+	Person(string name, int age) :name(name), age(age){}
+	void showInfo()
+	{
+		cout << "Person[name:" << name << ",age:" << age << "]" << endl;
+	}
+public:
+	string name;
+	int age;
+};
+
+
+void testMem_fun()
+{
+	vector<Person> v;
+	v.push_back(Person("Miky", 20));
+	v.push_back(Person("Cardsandra", 21));
+	v.push_back(Person("Phillip", 19));
+	for_each(v.begin(), v.end(), mem_fun_ref(&Person::showInfo));
+}
+
+int main(int argc, char const *argv[])
+{
+	testMem_fun();
+	system("pause");
+	return 0;
+}

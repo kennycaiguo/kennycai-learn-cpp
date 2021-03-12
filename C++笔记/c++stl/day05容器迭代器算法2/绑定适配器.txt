@@ -1,0 +1,58 @@
+在使用<algorithm>提供的函数如for_each时，它需要三个参数，最后一个参数是一个回调函数，它只接受
+一个参数，但是有时候我们希望它能够接受两个参数，这时候就需要使用绑定适配器，将需要两个参数的
+函数转为需要一个参数的函数。具体做法：1.编写回调函数的时候，需要继承binary_function<参数，参数，返回值>
+2.需要在操作符重载后面添加const。
+实例代码：
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
+#include<functional>
+#include <list>
+#include <algorithm>
+#include <sstream>
+
+using namespace std;
+struct MyPrint
+{
+	void operator()(int val)
+	{
+		cout << val << " ";
+	}
+};
+
+//使用绑定适配器的回调函数
+struct YourPrint:public binary_function<int,int,void>
+{
+	void operator()(int val,int v) const
+	{
+		cout << val + v<<" ";
+	}
+};
+//仿函数适配器bind1st  bind2nd 绑定适配器
+void testBind()
+{
+	vector<int> v;
+	for (int i = 0; i < 10; i++)
+	{
+		v.push_back(i);
+	}
+	//调用普通函数对象
+	MyPrint print;
+	for_each(v.begin(), v.end(), print);
+	cout << "================================" << endl;
+	//利用绑定适配器
+	for_each(v.begin(), v.end(), bind2nd(YourPrint(),10));
+	cout << endl;
+}
+ 
+
+int main(int argc, char const *argv[])
+{
+	testBind();
+	system("pause");
+	return 0;
+}

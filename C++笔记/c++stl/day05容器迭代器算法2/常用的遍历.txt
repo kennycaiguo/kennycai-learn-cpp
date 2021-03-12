@@ -1,0 +1,50 @@
+for_each(beg,end,_callback)
+transform(beg1,end1,beg2,_callback) 返回迭代器，不过可以不用返回值，必须要对v2初始化。
+
+实例：
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
+#include <unordered_set>
+#include <unordered_map>
+#include <list>
+#include <algorithm>
+#include <sstream>
+
+using namespace std;
+struct MyPlus
+{
+	int operator()(int val){
+		return val;
+	}
+};
+
+ 
+	void myprint(int val)
+	{
+		cout << val << " ";
+	}
+ 
+//transform(beg1,end1,beg2,_callback)将指定区间的元素搬运到另外一个容器中;
+void test_transform()
+{
+	vector<int> v1,v2;
+	v2.resize(10);
+	for (int i = 1; i <= 10; i++)
+	{
+		v1.push_back(i * 2 - 1);
+	}
+	vector<int>::iterator it=transform(v1.begin(), v1.end(), v2.begin(), MyPlus());
+	
+	for_each(v2.begin(), v2.end(),myprint);
+	cout << endl;
+}
+int main(int argc, char const *argv[])
+{
+	test_transform();
+	system("pause");
+	return 0;
+}

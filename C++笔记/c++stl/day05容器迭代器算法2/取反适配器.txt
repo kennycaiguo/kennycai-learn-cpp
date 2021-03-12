@@ -1,0 +1,110 @@
+not1：对一元函数取反
+1.被取反的函数对象必须继承 unary_function<参数，返回值>
+2.操作符重载后面需要添加const关键字
+not2：对二元函数取反
+1.被取反的函数对象必须继承binary_function<参数1，参数2，返回值>
+2.操作符重载后面需要添加const关键字
+
+ 实例1：not1
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include<functional>
+#include <time.h>
+#include<stdlib.h>
+#include <algorithm>
+ using namespace std;
+
+using namespace std;
+struct MyGreater5:public unary_function<int,bool>
+{
+	bool operator()(int v) const{
+		return v > 5;
+	}
+};
+
+void testNot1()
+{
+	vector<int> v;
+	for (int i = 0; i < 10; i++)
+	{
+		v.push_back(rand() % 10);
+	}
+	 
+	vector<int>::iterator ret;
+	 ret=find_if(v.begin(), v.end(), MyGreater5());
+	 cout << *ret << endl;
+	 
+	 cout << "after used not1:" << endl;
+	 ret = find_if(v.begin(), v.end(), not1(MyGreater5()));
+	 cout << *ret << endl;
+
+	 
+}
+//仿函数适配器 ptr_fun
+//成员函数适配器 mem_fun   mem_fun_ref
+
+ 
+int main(int argc, char const *argv[])
+{
+	//testBind();
+	testNot1();
+	system("pause");
+	return 0;
+}
+
+实例2：not2
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include<functional>
+#include <time.h>
+#include<stdlib.h>
+#include <algorithm>
+using namespace std;
+struct MyPrint
+{
+	void operator()(int val)
+	{
+		cout << val << " ";
+	}
+};
+
+struct MyCompare
+{
+	bool operator()(int a1, int a2)
+	{
+		return a1 > a2;
+	}
+};
+
+//定义从大到排列元素的仿函数
+struct NewCompare:public binary_function<int,int,bool>
+{
+	bool operator()(int a1, int a2) const
+	{
+		return a1 > a2;
+	}
+};
+
+void testNot2()
+{
+	vector<int> v;
+	for (int i = 0; i < 10; i++)
+	{
+		v.push_back(rand()%100);
+	}
+	cout << "排序前" << endl;
+	for_each(v.begin(), v.end(), MyPrint());
+	cout << endl;
+	cout << "使用取反适配器前" << endl;
+	sort(v.begin(), v.end(), MyCompare()); 
+	for_each(v.begin(), v.end(), MyPrint());
+	cout << endl;
+	cout << "使用取反适配器后" << endl;
+	sort(v.begin(), v.end(),not2(NewCompare()));//将一个定义从大到小排列元素的函数对象变为从小到大排列元素的反函数
+	for_each(v.begin(), v.end(), MyPrint());
+	cout << endl;
+}

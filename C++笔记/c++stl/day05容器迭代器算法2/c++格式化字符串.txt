@@ -1,0 +1,12 @@
+在C++中则只能借用C函数，用snprintf来格式化一片缓冲区
+
+#define BUFFSIZE 512
+    char buf[BUFFSIZE];
+    snprintf(buf, BUFFSIZE, "%s's age is %d\n", "赤红", 11);
+亦或者用类型无关的流运算符
+
+    std::ostringstream os;
+    os << "赤红" << "'s age is " << 11 << "\n";
+    std::string s = os.str();
+
+ 

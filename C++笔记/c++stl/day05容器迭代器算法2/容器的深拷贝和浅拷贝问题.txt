@@ -1,0 +1,84 @@
+将一个类对象放入容器是拷贝进去的。这就涉及到深浅拷贝的问题。
+如果没有实现深拷贝程序会崩掉：
+实例：
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
+#include <algorithm>
+#include <sstream>
+
+using namespace std;
+
+class Person
+{
+public:
+	Person(){}
+	Person(char *name,int age){
+		this->pName = new char[strlen(name) + 1];
+		strcpy(this->pName, name);
+		this->m_age = age;
+	}
+	Person(const Person& p){
+		this->pName = new char[strlen(p.pName) + 1];
+		strcpy(this->pName, p.pName);
+		this->m_age = p.m_age;
+	}
+                 
+                 Person& operator=(const Person&p)
+	{
+		this->pName = new char[strlen(p.pName) + 1];
+		strcpy(this->pName, p.pName);
+		this->m_age = p.m_age;
+		return *this;
+	}
+	~Person(){
+		if (this->pName != NULL)
+		{
+			delete[] this->pName;
+		}
+		this->m_age = 0;
+	}
+	void show(){
+		cout << "Person[name:" << this->pName << ",age:" << this->m_age << "]" << endl;
+	}
+public:
+	char *pName;
+	int m_age;
+};
+
+void test1()
+{
+	vector<Person*> v;
+	v.push_back(new Person("jack", 19));
+	v.push_back(new Person("rosy", 17));
+	v.push_back(new Person("michell", 21));
+	for (vector<Person*>::iterator it = v.begin(); it != v.end(); it++)
+	{
+		(*it)->show();
+	}
+}
+void test2()//没有实现深拷贝这个代码会崩
+{
+	vector<Person> v;
+	v.push_back(Person("Benny", 20));
+	v.push_back(Person("tracy", 18));
+	v.push_back(Person("nancy", 22));
+	for (vector<Person>::iterator it = v.begin(); it != v.end(); it++)
+	{
+		(*it).show();
+	}
+}
+
+int main(int argc, char const *argv[])
+{
+	//test1();
+	test2();
+	system("pause");
+	return 0;
+}
+
+注意：在test2()函数中，如果Person类没有实现深拷贝，程序一运行就挂掉。实现深拷贝后问题解决。
+还要重载=操作符

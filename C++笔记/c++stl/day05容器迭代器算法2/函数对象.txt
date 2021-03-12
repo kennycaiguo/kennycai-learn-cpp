@@ -1,0 +1,102 @@
+重载函数调用操作符的类，其对象常称为函数对象（function object），即它们是行为类似函数的对象，也叫做
+防函数（functor），其实就是重载“（）”操作符，使得类可以像函数那样调用。
+1.函数对象是一个类（的对象），其实还可以是结构体，不是函数。
+2.函数对象重载了()操作符使得它可以像函数一样调用。
+
+如：
+class Person
+{
+ public:
+    Person(){}
+    Person(string name,int age):name(name),age(age){}
+  public：
+    string name；
+    int age；
+}
+class mycompare
+{
+    public：
+        bool operator()(Person p1,Person p2)
+       {
+          return p1.age<p2.age;
+       }
+}
+
+
+以上就是一个函数对象，它可以作为容器的自定义排序规则，如set<Person,mycompare>,
+又如：
+class MyKey
+{
+   public :
+    MyKey(){}
+    MyKey(int index):index(index){}
+   public:
+       int index;
+}
+class mycompare2
+{
+    public：
+        bool operator()(MyKey k1,MyKey k2)
+       {
+          return k1.index>k2.index;
+       }
+}
+map<MyKey,int,mycompare2>。因为set，map等容器会自动排序，而它们并不知道
+自定义对象的排序方法，所以需要编写一个排序规则，否则插入这些自定义对象就会出错。
+
+3.函数对象可以保存函数的调用状态，例如被调用了几次：
+实例：
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
+#include <list>
+#include <algorithm>
+#include <sstream>
+
+using namespace std;
+struct MyPrint
+{
+	MyPrint(){
+		mNum = 0;
+	}
+	void operator()(int val)
+	{
+		mNum++;
+		cout << val << endl;
+	}
+public:
+	int mNum;
+};
+void testfunctor()
+{
+	MyPrint print;
+	print(10);
+}
+
+void testfunctor2()
+{
+	vector<int> v;
+	v.push_back(100);
+	v.push_back(90);
+	v.push_back(80);
+	v.push_back(75);
+	MyPrint print;
+	//把函数对象当作参数传递给for_each函数时，需要接受返回值才可以得到调用次数
+	MyPrint prtret=for_each(v.begin(), v.end(),print);
+	cout << "called times:" << prtret.mNum << endl;
+	//输出函数对象的调用次数
+	print(100);
+	print(200);
+	cout << "called times:" << print.mNum << endl;
+}
+int main(int argc, char const *argv[])
+{
+	//testfunctor();
+	testfunctor2();
+	 
+	system("pause");
+	return 0;
+}
