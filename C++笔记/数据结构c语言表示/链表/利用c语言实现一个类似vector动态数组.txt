@@ -1,0 +1,347 @@
+有三个文件：DynamicArray.h，DynamicArray.cpp，main.cpp
+
+DynamicArray.h的内容如下：
+#ifndef DYNAMIC_ARRAY_H
+#define DYNAMIC_ARRAY_H
+#include<stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+//指针保存内存首地址
+//capacity
+//size
+typedef struct DYNAMICARRAY{
+	int *Addr; //指针保存内存首地址
+	int capacity;//数组容量
+	int size; //数组中实际元素的个数，当size>capacity 时，需要扩容
+}Dynamic_Array;
+
+//初始化
+Dynamic_Array* Init_Array();
+//插入数据
+void PushBack_Array(Dynamic_Array* pArr,int val);
+//插入数据，方法二
+void PushBack_ArrayMe(Dynamic_Array* pArr, int val);
+//根据位置删除数据
+void RemoveByPos_Array(Dynamic_Array* pArr,int pos);
+//根据值删除数据
+void RemoveByValue_Array(Dynamic_Array* pArr, int value);
+//根据值删除数据,方法二
+void RemoveByValue_ArrayMe(Dynamic_Array* pArr, int value);
+//查找
+int Find_In_Array(Dynamic_Array* pArr, int value);
+//输出数组元素
+void Print_Array(Dynamic_Array* pArr);
+//清空数组
+void Clear_Array(Dynamic_Array* pArr);
+//获取数组的容量
+int GetArrayCapacity(Dynamic_Array* pArr);
+//获取数组实际元素个数
+int GetArraySize(Dynamic_Array* pArr);
+//获取某一个位置的元素
+int At_Array(Dynamic_Array* pArr, int pos);
+//改变容量
+void Resize(Dynamic_Array* pArr, int capacity);
+//释放动态数组内存
+void FreeSpace_Array(Dynamic_Array* pArr);
+#endif
+
+DynamicArray.cpp的内容如下
+#include"DynamicArray.h"
+
+
+//初始化
+Dynamic_Array* Init_Array()
+{
+	Dynamic_Array* pArr = (Dynamic_Array*)malloc(sizeof(Dynamic_Array));
+	pArr->size = 0;
+	pArr->capacity = 20;
+	pArr->Addr = (int*)malloc( sizeof(int)*pArr->capacity);
+	return pArr;
+}
+//插入数据
+void PushBack_Array(Dynamic_Array* pArr, int val)
+{
+	//先判断是否分配了内存空间
+	if (pArr == NULL)
+	{
+		return;
+	}
+	//判断空间是否足够
+	if (pArr->size == pArr->capacity)
+	{
+		//1.申请更大的空间
+		int* tmp = (int*)malloc(sizeof(int)*2 * pArr->capacity);
+		//2.将原来空间的元素拷贝到新空间
+		memcpy(tmp, pArr->Addr,pArr->capacity*sizeof(int)); 
+		 //3.释放原来的空间
+		free(pArr->Addr);
+		//4.更新容量
+		pArr->capacity = pArr->capacity * 2;
+		//5.让成员指针指向性空间
+		pArr->Addr = tmp;		
+	}
+	//6.将新元素添加到新空间
+	pArr->Addr[pArr->size] = val;
+	pArr->size++;
+}
+
+//插入数据
+void PushBack_ArrayMe(Dynamic_Array* pArr, int val)
+{
+	//先判断是否分配了内存空间
+	if (pArr == NULL)
+	{
+		return;
+	}
+	//判断空间是否足够
+	if (pArr->size == pArr->capacity)
+	{
+		int* tmp = (int*)malloc(2 * sizeof(int) *  pArr->capacity);
+		for (int i = 0; i < pArr->size; i++)
+		{
+			tmp[i] = pArr->Addr[i];
+		}
+		pArr->capacity = pArr->capacity * 2;
+		free(pArr->Addr);
+		pArr->Addr = tmp;
+		
+	}
+	pArr->Addr[pArr->size] = val;
+	pArr->size++;
+}
+//根据位置删除数据
+void RemoveByPos_Array(Dynamic_Array* pArr, int pos)
+{
+	//先判断是否分配了内存空间
+	if (pArr == NULL)
+	{
+		return;
+	}
+	//判断位置是否有效
+	if (pos < 0 || pos >= pArr->size)
+	{
+		return;
+	}
+	//删除元素，算法：将这个位置后面的元素往前移，然后将size--
+	for (int i = pos; i < pArr->size-1; i++)
+	{
+		pArr->Addr[i] = pArr->Addr[i + 1];
+	}
+	//将size减少一个
+	pArr->size--;
+}
+
+//根据值删除数据
+void RemoveByValue_Array(Dynamic_Array* pArr, int value)
+{
+	//先判断是否分配了内存空间
+	if (pArr == NULL)
+	{
+		return;
+	}
+	//1.查找元素的位置
+	int pos = -1;
+	for (int i = 0; i < pArr->size; i++)
+	{
+		if (pArr->Addr[i] == value)
+		{
+			pos = i;
+			break;
+		}
+	}
+	//2.根据位置删除
+	RemoveByPos_Array(pArr, pos);
+}
+//根据值删除数据
+void RemoveByValue_ArrayMe(Dynamic_Array* pArr, int value)
+{
+	//先判断是否分配了内存空间
+	if (pArr == NULL)
+	{
+		return;
+	}
+	//1.查找元素的位置
+	int pos = Find_In_Array(pArr, value);
+	//2.根据位置删除
+	RemoveByPos_Array(pArr, pos);
+}
+//查找
+int Find_In_Array(Dynamic_Array* pArr, int value)
+{
+	//先判断是否分配了内存空间
+	if (pArr == NULL)
+	{
+		return -1;
+	}
+
+	int pos = -1;
+	for (int i = 0; i < pArr->size; i++)
+	{
+		if (value==pArr->Addr[i])
+		{
+			pos = i;
+			break;
+		}
+	}
+	return pos;
+}
+//输出数组元素
+void Print_Array(Dynamic_Array* pArr)
+{  
+	//先判断是否分配了内存空间，然后再输出
+	if (pArr == NULL)
+	{
+		return;
+	}
+	for (int i = 0; i < pArr->size; i++)
+	{
+		printf("%d ", pArr->Addr[i]);
+	}
+	printf("\n ");
+}
+//获取某一个位置的元素
+int At_Array(Dynamic_Array* pArr, int pos)
+{
+	return pArr->Addr[pos];
+}
+//清空数组
+void Clear_Array(Dynamic_Array* pArr)
+{
+	//先判断是否分配了内存空间
+	if (pArr == NULL)
+	{
+		return;
+	}
+	pArr->size = 0;
+}
+
+//获取数组的容量
+int GetArrayCapacity(Dynamic_Array* pArr)
+{
+	//先判断是否分配了内存空间
+	if (pArr == NULL)
+	{
+		return-1;
+	}
+	return pArr->capacity;
+}
+//获取数组实际元素个数
+int GetArraySize(Dynamic_Array* pArr)
+{
+	//先判断是否分配了内存空间
+	if (pArr == NULL)
+	{
+		return-1;
+	}
+	return pArr->size;
+}
+
+//改变容量
+void Resize(Dynamic_Array* pArr, int capacity)
+{
+	//防止多次释放同一块内存
+	if (pArr == NULL)
+	{
+		return;
+	}
+	//根据传入的容量申请一块新内存
+	int *tmp = (int*)malloc(sizeof(int)*capacity);
+	//拷贝数据，如果新空间比原来的小，拷贝新空间的长度，如果新空间比原来的大拷贝原来空间的长度
+	if (capacity < pArr->capacity)
+	{
+		memcpy(tmp, pArr->Addr, capacity*sizeof(int));
+		free(pArr->Addr);
+		pArr->Addr = tmp;
+		pArr->size = capacity;
+		pArr->capacity = capacity;
+	}
+	else if (capacity>pArr->capacity)
+	{
+		memcpy(tmp, pArr->Addr, pArr->capacity*sizeof(int));
+		free(pArr->Addr);
+		pArr->Addr = tmp;
+		pArr->capacity = capacity;
+	}
+   
+}
+//释放动态数组内存
+void FreeSpace_Array(Dynamic_Array* pArr)
+{
+	//防止多次释放同一块内存
+	if (pArr == NULL)
+	{
+		return;
+	}
+	//先释放成员指针指向的内存
+	if (pArr->Addr != NULL)
+	{
+		free(pArr->Addr);
+		pArr->Addr = NULL;
+	}
+	//再释放结构体指针针指向的内存
+	free(pArr);
+	pArr = NULL;
+	 
+}
+
+main.cpp内容如下：
+#define _CRT_SECURE_NO_WARNINGS
+//#include <iostream>
+//#include <string>
+//#include <vector>
+//#include <set>
+//#include <map>
+#include <stdio.h>
+#include <stdlib.h>
+//#include <list>
+//#include <algorithm>
+#include <string.h>
+#include"DynamicArray.h"
+
+//using namespace std;
+//动态数组案例，属于线性表
+
+void testDynamicArr()
+{
+	Dynamic_Array* parr = Init_Array();
+	for (int i = 0; i < 30; i++)
+	{
+		PushBack_ArrayMe(parr, i*2);
+	}
+	printf("the size of the array is %d\n", GetArraySize(parr));
+	Print_Array(parr);
+	printf("\n=======================\n");
+	RemoveByPos_Array(parr, 0);
+	Print_Array(parr);
+	printf("\n=======================\n");
+	RemoveByValue_Array(parr,10);
+	Print_Array(parr);
+	printf("\n=======================\n");
+	printf("the index of value 6 is %d\n", Find_In_Array(parr, 6));
+	FreeSpace_Array(parr);
+}
+void testDynamicArrResize()
+{
+	Dynamic_Array* parr = Init_Array();
+	for (int i = 0; i < 10; i++)
+	{
+		PushBack_Array(parr, i * 2);
+	}
+	printf("before resize\n");
+	printf("orgin capacity:%d\n", GetArrayCapacity(parr));
+	Print_Array(parr);
+	
+	printf("after resize\n");
+	Resize(parr, 30);
+	//Resize(parr, 20);
+	printf("new capacity:%d\n", GetArrayCapacity(parr));
+	Print_Array(parr);
+}
+int main(int argc, char const *argv[])
+{
+	testDynamicArr();
+	//testDynamicArrResize();
+	system("pause");
+	return 0;
+}

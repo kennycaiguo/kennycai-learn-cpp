@@ -1,0 +1,250 @@
+利用栈来匹配左右括号对的算法：
+从第一个字符开始扫描，凡是遇到不是小括号的字符就直接忽略，遇到左括号就将其入栈。
+当遇到右括号时从栈中弹出栈顶符号并进行匹配。匹配成功，继续读入下一个字符，匹配失败，立即停止，
+并且报错结束。成功：所有字符扫描完毕，且栈为空。失败：匹配失败或者扫描完但是栈非空。
+
+本实例有3个文件：LinkStack.h，LinkStack.c，LinkStackUsage.c
+
+LinkStack.h：
+#ifndef LINKSTACK_H
+#define LINKSTACK_H
+#include<stdio.h>
+#include<stdlib.h>
+
+//链式栈的小节点
+typedef struct LINKNODE
+{
+	struct LINKNODE* next;
+}LinkNode;
+
+//链时栈
+typedef struct LINKSTACK
+{
+	struct LINKNODE  head;
+	int size;
+}LinkStack;
+
+//1.初始化链式栈
+LinkStack* Init_LinkStack();
+//2.入栈
+void PushIn_LinkStack(LinkStack* ls, LinkNode *data);
+
+//3.出栈
+void PopFrom_LinkStack(LinkStack* ls);
+//4.返回栈顶元素
+LinkNode* TopOf_LinkStack(LinkStack* ls);
+//5.返回栈中元素个数
+int SizeOf_LinkStack(LinkStack* ls);
+
+//6.清空栈
+void Clear_LinkStack(LinkStack* ls);
+
+//7.释放栈空间
+void Free_LinkStack(LinkStack* ls);
+#endif
+=================
+LinkStack.c
+#include"LinkStack.h"
+/*
+本实例利用链表来模拟栈空间，链表采用头插法，第一个元素代表栈顶元素，
+push就是插入数据（头插法），pop就是删除第一个节点（头节点的next），
+注意必须遵循先进后出的原则也就是只能由头插法，否则没有栈的效果。
+
+*/
+//1.初始化链式栈
+LinkStack* Init_LinkStack()
+{
+	LinkStack* ls = (LinkStack*)malloc(sizeof(LinkStack));
+	ls->head.next = NULL;
+	ls->size = 0;
+	return ls;
+}
+//2.入栈
+void PushIn_LinkStack(LinkStack* ls, LinkNode *data)
+{
+	if (ls == NULL)
+	{
+		return;
+	}
+	if (data == NULL)
+	{
+		return;
+	}
+	//头插法
+	data->next =ls->head.next;
+	ls->head.next = data;
+
+	//更新size
+	ls->size++;
+}
+
+//3.出栈
+void PopFrom_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return;
+	}
+	if (ls->size == 0)
+	{
+		return;
+	}
+	LinkNode* pNext = ls->head.next;
+		ls->head.next = pNext->next;
+	ls->size--;
+}
+//4.返回栈顶元素
+LinkNode* TopOf_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return NULL;
+	}
+	if (ls->size == 0)
+	{
+		return NULL;
+	}
+	return ls->head.next;
+
+}
+//5.返回栈中元素个数
+int SizeOf_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return -1;
+	}
+	
+	return ls->size;
+}
+
+//6.清空栈
+void Clear_LinkStack(LinkStack* ls)
+{
+
+	if (ls == NULL)
+	{
+		return;
+	}
+	ls->head.next = NULL;
+	ls->size = 0;
+}
+
+//7.释放栈空间
+void Free_LinkStack(LinkStack* ls)
+{
+	if (ls != NULL)
+	{
+		free(ls);
+	}
+}
+===================
+LinkStackUsage.c
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include"LinkStack.h"
+
+
+/*
+ 栈的应用案例1：就近匹配
+*/
+
+//定义数据结构体
+typedef struct MyString
+{
+	LinkNode head;
+	char* pAddr;
+	int index;
+}MyString;
+
+//定义一个判断左括号的函数
+int IsLeftParenthis(char c)
+{
+	return c == '(';
+	
+}
+//定义一个判断右号的函数
+int IsRightParenthis(char c)
+{
+	return c == ')';
+
+}
+//创建一个初始化MyString结构体的函数
+MyString* CreateMyString(char* p,int index)
+{
+	MyString* mystr = (MyString*)malloc(sizeof(MyString));
+	mystr->pAddr = p;
+	mystr->index =index;
+	return mystr;
+}
+//定义一个输出错误的函数
+void ShowError(char* str,int pos)
+{
+	printf("%s\n", str);
+	for (int i = 0; i < pos; i++)
+	{
+		printf(" ");
+	}
+	//输出小箭头，箭头的ASCII码24-27，24表示向上
+	 
+	printf("^");
+}
+void testUseLinkStack1()
+{
+	//char * str = "#include <stdio.h>int main(){int a[4][4]; int(*p)[4];p=a[0];return0;}";
+	char * str = "1+2+6(abc)hello girls((pussy)";
+	//创建栈空间
+	LinkStack* ls = Init_LinkStack();
+	char* p = str;
+	int index = 0;
+	while (*p!='\0')
+	{
+		 //如果是左括号，将其入栈
+		if (IsLeftParenthis(*p))
+		{
+			PushIn_LinkStack(ls, (LinkNode*)CreateMyString(p,index));
+		}
+		//遇到右括号时从栈中弹出栈顶符号并进行匹配
+		if (IsRightParenthis(*p))
+		{
+			if (SizeOf_LinkStack(ls) > 0)
+			{
+				MyString* mstr = (MyString*)TopOf_LinkStack(ls);
+
+				if (IsLeftParenthis(*(mstr->pAddr)))
+				{
+					PopFrom_LinkStack(ls);
+					free(mstr);
+				}
+			}
+			else
+			{
+				printf("右括号没有匹配的左括号\n");
+				ShowError(str, index);
+				break;
+			}
+			
+		}
+		p++;
+		index++;
+	}
+	while (SizeOf_LinkStack(ls)>0)
+	{
+		MyString* mstr = (MyString*)TopOf_LinkStack(ls);
+		printf("左括号没有匹配的右右括号\n");
+		ShowError(str, mstr->index);
+		PopFrom_LinkStack(ls);
+		free(mstr);
+	}
+	printf("\n");
+}
+
+int main(int argc, char const *argv[])
+{
+	testUseLinkStack1();
+	system("pause");
+	return 0;
+}
+==============

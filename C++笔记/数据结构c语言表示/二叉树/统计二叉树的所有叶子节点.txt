@@ -1,0 +1,83 @@
+叶子节点是指没有任何子节点的节点
+实例：FindBtreeLeafNodes.c
+内容如下：
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*
+ 查找二叉树的叶子节点
+*/
+//定义二叉树节点结构体
+typedef struct BinaryNode
+{
+	char ch;
+	struct BinaryNode* lChild;
+	struct BinaryNode* rChild;
+}BinaryNode;
+
+
+void CountLeafNodes(BinaryNode* root,int* count)
+{
+	//int num = 0;
+	if (root == NULL)
+	{
+		return;
+	}
+	if (count == NULL)
+	{
+        return;
+	}
+		
+	//统计根节点的叶子
+	if (root->lChild == NULL && root->rChild == NULL)
+	{
+		(*count)++;
+	}
+	//统计左节点的叶子
+	CountLeafNodes(root->lChild,count);
+	//统计右节点的叶子
+	CountLeafNodes(root->rChild,count);
+	 
+}
+void CreateBinaryTree()
+{
+	//创建所有节点
+	BinaryNode node1 = { 'A', NULL, NULL };
+	BinaryNode node2 = { 'B', NULL, NULL };
+	BinaryNode node3 = { 'C', NULL, NULL };
+	BinaryNode node4 = { 'D', NULL, NULL };
+	BinaryNode node5 = { 'E', NULL, NULL };
+	BinaryNode node6 = { 'F', NULL, NULL };
+	BinaryNode node7 = { 'G', NULL, NULL };
+	BinaryNode node8 = { 'H', NULL, NULL };
+
+	//开始创建二叉树
+	//A节点是跟节点，它的左子节点是B,右子节点是F
+	node1.lChild = &node2;
+	node1.rChild = &node6;
+
+	//B节点，没有左子节点，右子节点是C（node3）
+	node2.rChild = &node3;
+
+	//C节点，它的左子节点是D（node4），右子节点是E（node5）
+	node3.lChild = &node4;
+	node3.rChild = &node5;
+
+	//F节点，它没有子左节点，它的右子节点是G节点（node7）
+	node6.rChild = &node7;
+
+	//G节点，它只有左子节点是H节点(node8)
+	node7.lChild = &node8;
+	int leafCount=0;
+	CountLeafNodes(&node1,&leafCount);
+	printf("total leaves:%d", leafCount);
+}
+
+int main(int argc, char const *argv[])
+{
+	CreateBinaryTree();
+	system("pause");
+	return 0;
+}

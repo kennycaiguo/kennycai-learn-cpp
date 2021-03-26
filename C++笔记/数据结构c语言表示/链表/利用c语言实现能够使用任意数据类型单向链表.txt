@@ -1,0 +1,256 @@
+一共有三个文件：LinkList.h,LinkList.c ,onewaylist.c
+LinkList.h的内容如下：
+#ifndef LINKLIST_H
+#define LINKLIST_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+//定义列表节点
+typedef struct LINKNODE{
+	void* data;
+	struct LINKNODE* next;
+}LinkNode;
+
+//列表结构体
+typedef struct LINKLIST{
+	LinkNode* head;
+	int size;
+}LinkList;
+
+//回调函数指针
+typedef void(*PRINTLINKLIST)(void*);
+
+
+//常用操作
+//1.初始化链表
+LinkList* Init_LinkList();
+//2.在指定位置插入节点
+void InsertInto_LinkList(LinkList* ll,int pos,void* data);
+//3.删除指定位置的值
+void RemoveByPos_LinkList(LinkList* ll,int pos);
+//4.获取列表的长度
+int GetSize_LinkList(LinkList* ll);
+//查找
+int Find_LinkList(LinkList* ll, void* data);
+//返回第一个节点
+void* Front_LinkList(LinkList* ll);
+//输出链表元素
+void  Print_LinkList(LinkList* ll,PRINTLINKLIST print);//需要使用回调函数
+//释放链表内存
+void FreeSpace_LinkList(LinkList* ll);
+#endif
+LinkList.c的内容如下：
+#include"LinkList.h"
+
+//1.初始化链表
+LinkList* Init_LinkList()
+{
+	LinkList* list = (LinkList*)malloc(sizeof(LinkList));
+	list->size = 0;
+	//初始化头节点，它不保存数据
+	list->head = (LinkNode*)malloc(sizeof(LinkNode));
+	list->head->data = NULL;
+	list->head->next = NULL;
+	return list;
+}
+//2.在指定位置插入节点
+void InsertInto_LinkList(LinkList* ll, int pos, void* data)
+{
+	if (ll == NULL)
+	{
+		return;
+	}
+	if (data == NULL)
+	{
+		return;
+	}
+	//处理pos越界
+	if (pos < 0||pos>ll->size)
+	{
+		pos = ll->size;
+	}
+
+	//创建新节点
+	LinkNode *newNode = (LinkNode *)malloc(sizeof(LinkNode));
+	newNode->data = data;
+	newNode->next = NULL;
+	//找位置,需要一个辅助变量
+	LinkNode *pCurrent = ll->head;
+	for (int i = 0; i < pos; i++)
+	{
+		pCurrent = pCurrent->next;
+	}
+	//新节点入链表
+	newNode->next = pCurrent->next;
+	pCurrent->next = newNode;
+	//更新列表大小
+	ll->size++;
+}
+//3.删除指定位置的值
+void RemoveByPos_LinkList(LinkList* ll, int pos)
+{
+	if (ll == NULL)
+	{
+		return;
+	}
+	//处理pos越界
+	if (pos < 0 || pos>=ll->size)
+	{
+		return;
+	}
+	//找位置,需要一个辅助变量
+	LinkNode *pCurrent = ll->head;
+	for (int i = 0; i < pos; i++)
+	{
+		pCurrent = pCurrent->next;
+	}
+	//缓存被删除节点
+	LinkNode *pDel = pCurrent->next;
+	//pCurrent->next = pDel->next->next;
+	pCurrent->next = pDel->next;
+	//释放被删除节点的内存空间
+	free(pDel);
+	//将链表的长度减少1
+	ll->size--;
+}
+//4.获取列表的长度
+int GetSize_LinkList(LinkList* ll)
+{
+	if (ll == NULL)
+	{
+		return -1;
+	}
+	return ll->size;
+}
+//查找
+int Find_LinkList(LinkList* ll, void* data)
+{
+	//1.数据合法校验
+	if (ll == NULL)
+	{
+		return -1;
+	}
+	if (data == NULL)
+	{
+		return -1;
+	}
+	//遍历链表查找数据
+	int pos = -1;
+	//注意头节点不保存数据
+	//LinkNode *pCurrent = ll->head->next;
+	LinkNode *pCurrent = ll->head;
+	while (pCurrent!=NULL)
+	{
+		 
+		if (pCurrent->data == data)
+		{
+			break;
+		}
+		pos++;
+		pCurrent = pCurrent->next;
+	}
+
+	return pos;
+}
+//返回第一个节点,也就是头节点的下一个节点
+void* Front_LinkList(LinkList* ll)
+{
+	return ll->head->next->data;
+}
+//输出链表元素//需要使用回调函数
+void  Print_LinkList(LinkList* ll, PRINTLINKLIST print)
+{
+	//合法性检查
+	if (ll == NULL)
+	{
+		return;
+	}
+	//遍历输出，需要一个辅助变量
+	LinkNode *pCurrent = ll->head->next;
+	while (pCurrent!=NULL)
+	{
+		print(pCurrent->data);
+		pCurrent = pCurrent->next;
+	}
+}
+//释放链表内存
+void FreeSpace_LinkList(LinkList* ll)
+{
+	if (ll == NULL)
+	{
+		return;
+	}
+	 //利用辅助变量遍历释放节点内存
+	LinkNode *pCurrent = ll->head;
+	while (pCurrent!=NULL)
+	{
+		//1.缓存下一个节点
+		LinkNode *pNext = pCurrent->next;
+		pCurrent->next = NULL;
+		free(pCurrent);
+		pCurrent = pNext;
+	}
+	//释放链表内存
+	ll->size = 0;
+	free(ll);
+}
+
+onewaylist.c的内容如下：
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include"LinkList.h"
+
+typedef struct Person{
+	char name[100];
+	int age;
+	int money;
+}Person;
+
+//输出的回调函数
+void PrintPerson(void* data)
+{
+	Person p = *((Person*)data);
+	printf("name:%s,age:%d,money:%d \n",p.name,p.age,p.money);
+}
+void testLinkList()
+{
+	LinkList *list = Init_LinkList();
+	Person p1 ={ "Jack", 20, 2000 };
+	Person p2 = { "Jade", 22, 3000 };
+	Person p3 = { "Frank", 20, 2300 };
+	Person p4 = { "Stephany", 23, 2100 };
+	Person p5 = { "Marlon", 19, 2400 };
+	
+	InsertInto_LinkList(list, 0, &p1);
+	InsertInto_LinkList(list, 0, &p2);
+	InsertInto_LinkList(list, 0, &p3);
+	InsertInto_LinkList(list, 0, &p4);
+	InsertInto_LinkList(list, 0, &p5);
+	int pos = Find_LinkList(list, &p2);
+	printf("the position is: %d\n", pos);
+	//for (int i = 0; i < 5; i++)
+	//{
+	//	//头插法
+	//	InsertInto_LinkList(list, 0, &person[i]);
+	//}
+	//遍历输出链表元素
+	Print_LinkList(list, PrintPerson);
+	//输出链表的长度
+	printf("the length of list:%d\n",GetSize_LinkList(list));
+	printf("======================================\n");
+	//删除元素
+	RemoveByPos_LinkList(list, 2);
+	printf("the length of list:%d\n", GetSize_LinkList(list));
+	
+	Print_LinkList(list, PrintPerson);
+	Person *p = (Person*)Front_LinkList(list);
+	printf("name:%s,age:%d,money:%d \n", p->name, p->age, p->money);
+}
+int main(int argc, char const *argv[])
+{
+	testLinkList();
+	system("pause");
+	return 0;
+}

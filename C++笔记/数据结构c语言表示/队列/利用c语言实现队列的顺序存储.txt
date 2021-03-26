@@ -1,0 +1,227 @@
+队列是先进先出的。只能从一个口进，另外一个口出。可以实现顺序存储和链式存储。
+队列特点：先进先出。利用一个结构体的数组成员来模拟队列，数组的左边当作队头，右边当作队尾
+本实例有三个文件：SeqQueue.h ,SeqQueue.c,queueadt.c
+
+SeqQueue.h :
+#ifndef SEQQUEUE_H
+#define SEQQUEUE_H
+#include<stdio.h>
+#include<stdlib.h>
+#define MAX_SIZE 1024
+
+//顺序队列结构体
+typedef struct SEQQUEUE
+{
+	void* data[MAX_SIZE];
+	int size;
+}SeqQueue;
+
+//1.初始化
+SeqQueue* Init_SeqQueue();
+//2.入队
+void Push_Back_SeqQueue(SeqQueue*sq , void* data);
+//3.返回对头元素
+void* Front_Of_SeqQueue(SeqQueue* sq);
+
+//4.出队操作
+void PopFrom_SeqQueue(SeqQueue* sq);
+
+//5.返回队尾元素
+void* Back_Of_SeqQueue(SeqQueue* sq);
+
+//6.获取队列的大小
+int Size_Of_SeqQueue(SeqQueue* sq);
+
+//清空队列
+void Clear_SeqQueue(SeqQueue* sq);
+
+//8.释放队列空间
+void Free_SeqQueue(SeqQueue* sq);
+ 
+
+#endif
+============================
+SeqQueue.c:
+#include"SeqQueue.h"
+
+//1.初始化
+SeqQueue* Init_SeqQueue()
+{
+	SeqQueue* sq = (SeqQueue*)malloc(sizeof(SeqQueue));
+	for (int i = 0; i < MAX_SIZE; i++)
+	{
+		sq->data[i] = NULL;
+    }
+	sq->size = 0;
+
+	return sq;
+}
+//2.入队,把数组的左边当作队列的队头
+void Push_Back_SeqQueue(SeqQueue*sq, void* data)
+{
+	if (sq == NULL)
+	{
+		return;
+	}
+	if (data == NULL)
+	{
+		return;
+	}
+	//必须判断数组是否已经满了
+	if (sq->size == MAX_SIZE)
+	{
+		return;
+	}
+	sq->data[sq->size] = data;
+	sq->size++;
+}
+//3.返回队头元素
+void* Front_Of_SeqQueue(SeqQueue* sq)
+{
+	if (sq == NULL)
+	{
+		return NULL;
+	}
+	if (sq->size == 0)
+	{
+		return NULL;
+	}
+	return sq->data[0];
+}
+
+//4.出队操作
+void PopFrom_SeqQueue(SeqQueue* sq)
+{
+	if (sq == NULL)
+	{
+		return ;
+	}
+	if (sq->size == 0)
+	{
+		return ;
+	}
+	for (int i = 0; i < sq->size; i++)
+	{
+		sq->data[i] = sq->data[i + 1];
+	}
+	sq->size--;
+}
+
+//5.返回队尾元素，把数组的右边当作队尾
+void* Back_Of_SeqQueue(SeqQueue* sq)
+{
+	if (sq == NULL)
+	{
+		return NULL;
+	}
+	if (sq->size == 0)
+	{
+		return NULL;
+	}
+	return sq->data[sq->size - 1];
+}
+
+//6.获取队列的大小
+int Size_Of_SeqQueue(SeqQueue* sq)
+{
+	if (sq == NULL)
+	{
+		return -1;
+	}
+	 
+	return sq->size;
+}
+
+//清空队列
+void Clear_SeqQueue(SeqQueue* sq)
+{
+	if (sq == NULL)
+	{
+		return;
+	}
+	/*for (int i = 0; i < sq->size; i++)
+	{
+		sq->data[i] = NULL;
+	}*/
+	sq->size = 0;
+}
+
+//8.释放队列空间
+void Free_SeqQueue(SeqQueue* sq)
+{
+	if (sq != NULL)
+	{
+		free(sq);
+	}
+}
+===========================
+queueadt.c:
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include"SeqQueue.h"
+
+typedef struct Person{
+	char name[65];
+	int age;
+
+}Person;
+
+void PrintSeqQueueElems(SeqQueue* sq)
+{
+	SeqQueue tmp = *sq;
+	Person* p = NULL;
+	int i= 1;
+	while (tmp.size>0)
+	{
+		p = (Person*)Front_Of_SeqQueue(&tmp);
+		printf("队列第%d个元素：Person[name:%s,age:%d]\n",i, p->name, p->age);
+		i++;
+		PopFrom_SeqQueue(&tmp);
+	}
+}
+void testSeqQueue()
+{
+  //初始化队列
+	SeqQueue* sq = Init_SeqQueue();
+	//创建数据：
+	Person persons[5] = {
+			{ "Andy", 25 },
+			{ "Ana", 18 },
+			{ "Ben", 19 },
+			{ "Brandy", 20 },
+			{ "Cindy", 22 }
+	};
+
+	//插入元素
+	for (int i = 0; i < 5; i++)
+	{
+		Push_Back_SeqQueue(sq, &persons[i]);
+	}
+	//显示列表大小
+	printf("the size of queue is:%d\n",Size_Of_SeqQueue(sq));
+                 //输出队列元素
+	PrintSeqQueueElems(sq);
+	//获取对头元素
+	Person* p = (Person*)Front_Of_SeqQueue(sq);
+	printf("队头元素：Person[name:%s,age:%d]\n",p->name,p->age);
+	//获取队尾元素
+	p = (Person*)Back_Of_SeqQueue(sq);
+	printf("队尾元素：Person[name:%s,age:%d]\n", p->name, p->age);
+	//测试清空
+	//Clear_SeqQueue(sq);
+	////显示列表大小
+	//printf("the size of queue is:%d\n", Size_Of_SeqQueue(sq));
+
+	//释放队列空间
+	Free_SeqQueue(sq);
+}
+
+
+int main(int argc, char const *argv[])
+{
+	testSeqQueue();
+	system("pause");
+	return 0;
+}

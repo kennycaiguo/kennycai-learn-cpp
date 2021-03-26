@@ -1,0 +1,224 @@
+也可以使用链表来模拟栈。利用链表来模拟栈空间，链表采用头插法，第一个元素代表栈顶元素，
+push就是插入数据（头插法），pop就是删除第一个节点（头节点的next），
+注意必须遵循先进后出的原则也就是只能由头插法，否则没有栈的效果。
+
+本实例有3个文件：LinkStack.h，LinkStack.c，stacList.c
+
+LinkStack.h的内容：
+#ifndef LINKSTACK_H
+#define LINKSTACK_H
+#include<stdio.h>
+#include<stdlib.h>
+
+//链式栈的小节点
+typedef struct LINKNODE
+{
+	struct LINKNODE* next;
+}LinkNode;
+
+//链时栈
+typedef struct LINKSTACK
+{
+	struct LINKNODE  head;
+	int size;
+}LinkStack;
+
+//1.初始化链式栈
+LinkStack* Init_LinkStack();
+//2.入栈
+void PushIn_LinkStack(LinkStack* ls, LinkNode *data);
+
+//3.出栈
+void PopFrom_LinkStack(LinkStack* ls);
+//4.返回栈顶元素
+LinkNode* TopOf_LinkStack(LinkStack* ls);
+//5.返回栈中元素个数
+int SizeOf_LinkStack(LinkStack* ls);
+
+//6.清空栈
+void Clear_LinkStack(LinkStack* ls);
+
+//7.释放栈空间
+void Free_LinkStack(LinkStack* ls);
+#endif
+================
+LinkStack.c的内容：
+#include"LinkStack.h"
+/*
+本实例利用链表来模拟栈空间，链表采用头插法，第一个元素代表栈顶元素，
+push就是插入数据（头插法），pop就是删除第一个节点（头节点的next），
+注意必须遵循先进后出的原则也就是只能由头插法，否则没有栈的效果。
+
+*/
+//1.初始化链式栈
+LinkStack* Init_LinkStack()
+{
+	LinkStack* ls = (LinkStack*)malloc(sizeof(LinkStack));
+	ls->head.next = NULL;
+	ls->size = 0;
+	return ls;
+}
+//2.入栈
+void PushIn_LinkStack(LinkStack* ls, LinkNode *data)
+{
+	if (ls == NULL)
+	{
+		return;
+	}
+	if (data == NULL)
+	{
+		return;
+	}
+	//头插法
+	data->next =ls->head.next;
+	ls->head.next = data;
+
+	//更新size
+	ls->size++;
+}
+
+//3.出栈
+void PopFrom_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return;
+	}
+	if (ls->size == 0)
+	{
+		return;
+	}
+	LinkNode* pNext = ls->head.next;
+		ls->head.next = pNext->next;
+	ls->size--;
+}
+//4.返回栈顶元素
+LinkNode* TopOf_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return NULL;
+	}
+	if (ls->size == 0)
+	{
+		return NULL;
+	}
+	return ls->head.next;
+
+}
+//5.返回栈中元素个数
+int SizeOf_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return -1;
+	}
+	
+	return ls->size;
+}
+
+//6.清空栈
+void Clear_LinkStack(LinkStack* ls)
+{
+
+	if (ls == NULL)
+	{
+		return;
+	}
+	ls->head.next = NULL;
+	ls->size = 0;
+}
+
+//7.释放栈空间
+void Free_LinkStack(LinkStack* ls)
+{
+	if (ls != NULL)
+	{
+		free(ls);
+	}
+}
+=================
+stacList.c的内容：
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include"LinkStack.h"
+
+typedef struct Person{
+	LinkNode* head;
+	char name[65];
+	int age;
+
+}Person;
+
+void PrintLinkStackElems(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return;
+	}
+	LinkStack tmp = *ls;
+	Person* top = NULL;
+	while (tmp.size>0)
+	{
+		top = (Person*)TopOf_LinkStack(&tmp);
+		printf("name:%s,age:%d\n", top->name, top->age);
+		PopFrom_LinkStack(&tmp);
+	}
+}
+void testLinkStack()
+{
+	LinkStack* ls = Init_LinkStack();
+	Person persons[5] = {
+			{ NULL, "Andy",   25 },
+			{ NULL, "Ana",    18 },
+			{ NULL, "Ben",    19 },
+			{ NULL, "Brandy", 20 },
+			{ NULL, "Cindy",  22 }
+	};
+	for (int i = 0; i < 5; i++)
+	{
+		PushIn_LinkStack(ls, (LinkNode*)&persons[i]);
+	}
+	
+	//显示栈元素个数
+	printf("the size of LinkStack:%d\n",SizeOf_LinkStack(ls));
+	//显示栈顶元素
+	Person* p = (Person*)TopOf_LinkStack(ls);
+	printf("栈顶元素：name:%s,age:%d\n", p->name, p->age);
+	//输出栈元素
+	PrintLinkStackElems(ls);
+	printf("the size of LinkStack:%d\n", SizeOf_LinkStack(ls));
+}
+
+void testClearLinkStack()
+{
+	LinkStack* ls = Init_LinkStack();
+	Person persons[5] = {
+			{ NULL, "Andy", 25 },
+			{ NULL, "Ana", 18 },
+			{ NULL, "Ben", 19 },
+			{ NULL, "Brandy", 20 },
+			{ NULL, "Cindy", 22 }
+	};
+	for (int i = 0; i < 5; i++)
+	{
+		PushIn_LinkStack(ls, (LinkNode*)&persons[i]);
+	}
+	printf("=====================before clear=============================\n");
+	//显示栈元素个数
+	printf("the size of LinkStack:%d\n", SizeOf_LinkStack(ls));
+    //清除栈
+	Clear_LinkStack(ls);
+	printf("=====================after clear=============================\n");
+	//显示栈元素个数
+	printf("the size of LinkStack:%d\n", SizeOf_LinkStack(ls));
+}
+int main(int argc, char const *argv[])
+{
+	//testLinkStack();
+	testClearLinkStack();
+	system("pause");
+	return 0;
+}

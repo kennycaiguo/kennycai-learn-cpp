@@ -1,0 +1,251 @@
+二叉树的设计使得遍历二叉树的最佳方式的递归，但是有时候也可以使用非递归方式遍历
+这就需要使用栈空间来实现。
+本实例有3个文件：LinkStack.h,LinkStack.c,btreetravelwithoutrecursion.c
+LinkStack.h:
+
+#ifndef LINKSTACK_H
+#define LINKSTACK_H
+#include<stdio.h>
+#include<stdlib.h>
+
+//链式栈的小节点
+typedef struct LINKNODE
+{
+	struct LINKNODE* next;
+}LinkNode;
+
+//链时栈
+typedef struct LINKSTACK
+{
+	struct LINKNODE  head;
+	int size;
+}LinkStack;
+
+//1.初始化链式栈
+LinkStack* Init_LinkStack();
+//2.入栈
+void PushIn_LinkStack(LinkStack* ls, LinkNode *data);
+
+//3.出栈
+void PopFrom_LinkStack(LinkStack* ls);
+//4.返回栈顶元素
+LinkNode* TopOf_LinkStack(LinkStack* ls);
+//5.返回栈中元素个数
+int SizeOf_LinkStack(LinkStack* ls);
+
+//6.清空栈
+void Clear_LinkStack(LinkStack* ls);
+
+//7.释放栈空间
+void Free_LinkStack(LinkStack* ls);
+#endif
+===================
+LinkStack.c:
+#include"LinkStack.h"
+/*
+本实例利用链表来模拟栈空间，链表采用头插法，第一个元素代表栈顶元素，
+push就是插入数据（头插法），pop就是删除第一个节点（头节点的next），
+注意必须遵循先进后出的原则也就是只能由头插法，否则没有栈的效果。
+
+*/
+//1.初始化链式栈
+LinkStack* Init_LinkStack()
+{
+	LinkStack* ls = (LinkStack*)malloc(sizeof(LinkStack));
+	ls->head.next = NULL;
+	ls->size = 0;
+	return ls;
+}
+//2.入栈
+void PushIn_LinkStack(LinkStack* ls, LinkNode *data)
+{
+	if (ls == NULL)
+	{
+		return;
+	}
+	if (data == NULL)
+	{
+		return;
+	}
+	//头插法
+	data->next =ls->head.next;
+	ls->head.next = data;
+
+	//更新size
+	ls->size++;
+}
+
+//3.出栈
+void PopFrom_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return;
+	}
+	if (ls->size == 0)
+	{
+		return;
+	}
+	LinkNode* pNext = ls->head.next;
+		ls->head.next = pNext->next;
+	ls->size--;
+}
+//4.返回栈顶元素
+LinkNode* TopOf_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return NULL;
+	}
+	if (ls->size == 0)
+	{
+		return NULL;
+	}
+	return ls->head.next;
+
+}
+//5.返回栈中元素个数
+int SizeOf_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return -1;
+	}
+	
+	return ls->size;
+}
+
+//6.清空栈
+void Clear_LinkStack(LinkStack* ls)
+{
+
+	if (ls == NULL)
+	{
+		return;
+	}
+	ls->head.next = NULL;
+	ls->size = 0;
+}
+
+//7.释放栈空间
+void Free_LinkStack(LinkStack* ls)
+{
+	if (ls != NULL)
+	{
+		free(ls);
+	}
+}
+==============
+btreetravelwithoutrecursion.c:
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include"LinkStack.h"
+
+#define MY_FALSE 0
+#define MY_TRUE 1
+
+
+//定义二叉树节点结构体
+typedef struct BinaryNode
+{
+	char ch;
+	struct BinaryNode* lChild;
+	struct BinaryNode* rChild;
+}BinaryNode;
+
+//创建企业链表节点
+typedef struct BTREESTACKNODE
+{
+	LinkNode node;
+	BinaryNode* root;
+	int flag;
+}BtreeStackNode;
+
+//创建栈中的节点
+BtreeStackNode* CreateBtreeStackNode(BinaryNode* node,int flag)
+{
+	BtreeStackNode* newnode = (BtreeStackNode*)malloc(sizeof(BtreeStackNode));
+	newnode->root = node;
+	newnode->flag = flag;
+	return newnode;
+}
+
+//非递归方式遍历二叉树
+void NonRecursiontvl(BinaryNode *root)
+{
+	//创建栈
+	LinkStack* ls = Init_LinkStack();
+	//先将跟节点入栈
+	PushIn_LinkStack(ls, (LinkNode*)CreateBtreeStackNode(root, MY_FALSE));
+	while (SizeOf_LinkStack(ls)>0)
+	{
+		//先获取栈顶元素再弹出
+		BtreeStackNode* node = (BtreeStackNode*)TopOf_LinkStack(ls);
+		PopFrom_LinkStack(ls);
+		//判断弹出的节点是否为空。
+		if (node->root == NULL)
+		{
+			continue;
+		}
+		//判断标志位是否位TRUE，如果不是，就不显示
+		if (node->flag == MY_TRUE)
+		{
+			printf("%c",node->root->ch);
+		}
+		else
+		{
+			//先将右子树压栈
+			PushIn_LinkStack(ls, (LinkNode*)CreateBtreeStackNode(node->root->rChild,MY_FALSE));
+			//再将左子树压栈
+			PushIn_LinkStack(ls, (LinkNode*)CreateBtreeStackNode(node->root->lChild, MY_FALSE));
+			//再将当前节点入栈
+			node->flag = MY_TRUE;
+			PushIn_LinkStack(ls, (LinkNode*)node);
+			
+		}
+	}
+}
+void CreateBinaryTree()
+{
+	//创建所有节点
+	BinaryNode node1 = { 'A', NULL, NULL };
+	BinaryNode node2 = { 'B', NULL, NULL };
+	BinaryNode node3 = { 'C', NULL, NULL };
+	BinaryNode node4 = { 'D', NULL, NULL };
+	BinaryNode node5 = { 'E', NULL, NULL };
+	BinaryNode node6 = { 'F', NULL, NULL };
+	BinaryNode node7 = { 'G', NULL, NULL };
+	BinaryNode node8 = { 'H', NULL, NULL };
+
+	//开始创建二叉树
+	//A节点是跟节点，它的左子节点是B,右子节点是F
+	node1.lChild = &node2;
+	node1.rChild = &node6;
+
+	//B节点，没有左子节点，右子节点是C（node3）
+	node2.rChild = &node3;
+
+	//C节点，它的左子节点是D（node4），右子节点是E（node5）
+	node3.lChild = &node4;
+	node3.rChild = &node5;
+
+	//F节点，它没有子左节点，它的右子节点是G节点（node7）
+	node6.rChild = &node7;
+
+	//G节点，它只有左子节点是H节点(node8)
+	node7.lChild = &node8;
+  //二叉树的非递归遍历
+	NonRecursiontvl(&node1);
+}
+
+
+int main(int argc, char const *argv[])
+{
+	
+	CreateBinaryTree();
+	system("pause");
+	return 0;
+}
+=================

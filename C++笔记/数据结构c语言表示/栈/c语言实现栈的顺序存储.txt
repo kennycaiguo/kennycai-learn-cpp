@@ -1,0 +1,218 @@
+栈的特点先进后出。可以用一段连续的内存空间来模拟栈，栈不可以遍历，如果需要
+循环输出栈元素，必须先用top()方法获取栈顶元素，然后再弹出该元素，再次重复上述过程
+，直到输出最后一个元素。所以需要使用while循环
+本实例有三个文件：
+seqStack.h，seqStack.c,stackadt.c
+seqStack.h的内容：
+#ifndef SEQSTACK_H
+#define SEQSTACK_H
+#include<stdio.h>
+#include<stdlib.h>
+//用数组去模拟栈的顺序存储
+#define MAX_SIZE 1024
+#define SEQSTACK_TRUE 1
+#define SEQSTACK_FALSE 0
+
+typedef struct SEQSTACK
+{
+	void* data[MAX_SIZE];
+	int size;
+
+}SeqStack;
+
+//初始化栈
+SeqStack* Init_SeqStack();
+//入栈操作
+void PushIn_SeqStack(SeqStack* s, void *data);
+//返回栈顶元素
+void*  TopOf_SeqStack(SeqStack* s);
+//出栈
+void PopFrom_SeqStack(SeqStack* s);
+
+//判断栈是否为空
+int IsEmpty_SeqStack(SeqStack* s);
+
+//获取栈元素个数
+int SizeOf_SeqStack(SeqStack* s);
+//清空栈
+void Clear_SeqStack(SeqStack* s);
+
+//释放栈空间
+void Free_SeqStack(SeqStack* s);
+
+#endif
+======================
+seqStack.c的内容：
+#include"seqStack.h"
+
+//初始化栈
+SeqStack* Init_SeqStack()
+{
+	SeqStack* s = (SeqStack*)malloc(sizeof(SeqStack));
+	for (int i = 0; i < MAX_SIZE; i++)
+	{
+		s->data[i] = NULL;
+	}
+	s->size = 0;
+	return s;
+}
+//入栈操作
+void PushIn_SeqStack(SeqStack* s, void *data)
+{
+	if (s == NULL)
+	{
+		return;
+	}
+	if (s->size == MAX_SIZE)
+	{
+		return;
+	}
+	if (data == NULL)
+	{
+		return;
+	}
+	s->data[s->size] = data;
+	s->size++;
+}
+//返回栈顶元素
+void*  TopOf_SeqStack(SeqStack* s)
+{
+	if (s == NULL)
+	{
+		return NULL;
+	}
+	if (s->size == 0)
+	{
+		return NULL;
+	}
+	return s->data[s->size - 1];
+}
+//出栈
+void PopFrom_SeqStack(SeqStack* s)
+{
+	if (s == NULL)
+	{
+		return ;
+	}
+	if (s->size == 0)
+	{
+		return ;
+	}
+	s->data[s->size - 1]=NULL;
+	s->size--;
+}
+
+//判断栈是否为空
+int IsEmpty_SeqStack(SeqStack* s)
+{
+	if (s == NULL)
+	{
+		return -1;
+	}
+	if (s->size == 0)
+	{
+		return SEQSTACK_TRUE;
+	}
+	return SEQSTACK_FALSE;
+}
+
+//获取栈元素个数
+int SizeOf_SeqStack(SeqStack* s)
+{
+	return s->size;
+}
+//清空栈
+void Clear_SeqStack(SeqStack* s)
+{
+	if (s == NULL)
+	{
+		return;
+	}
+	for (int i = 0; i < s->size; i++)
+	{
+		s->data[i] = NULL;
+	}
+	s->size = 0;
+}
+
+//释放栈空间
+void Free_SeqStack(SeqStack* s)
+{
+	if (s == NULL)
+	{
+		return;
+	}
+	free(s);
+}
+
+=========================
+stackadt.c的内容：
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include"seqStack.h"
+
+typedef struct Person{
+	char name[65];
+	int age;
+
+}Person;
+
+void printStackElem(SeqStack sp)
+{
+	SeqStack tem = sp;
+	Person* pp = NULL;
+	while (tem.size>0){
+		pp = (Person*)TopOf_SeqStack(&tem);
+		printf("name:%s,age:%d\n", pp->name, pp->age);
+		PopFrom_SeqStack(&tem);
+	}
+}
+void testSeqStack()
+{
+	//1.初始化stack
+	SeqStack *stack = Init_SeqStack();
+	//2.创建数据
+	Person persons[5] = {
+			{ "Andy", 25},
+			{ "Ana", 18},
+			{ "Ben", 19 },
+			{ "Brandy", 20},
+			{ "Cindy", 22 }
+	};
+	//入栈
+	for (int i = 0; i < 5; i++)
+	{
+		PushIn_SeqStack(stack, &persons[i]);
+	}
+	//判断栈是否为空
+	if (IsEmpty_SeqStack(stack) == SEQSTACK_TRUE)
+	{
+		printf("栈为空\n");
+	}
+	else
+	{
+		printf("栈不为空\n");
+	}
+	//遍历输出栈元素
+	printStackElem(*stack);
+	//返回栈顶元素
+	Person* pp = (Person*)TopOf_SeqStack(stack);
+	printf("name:%s,age:%d\n", pp->name, pp->age);
+	//返回栈元素个数
+	printf("栈中一共有%d个元素\n", SizeOf_SeqStack(stack));
+	//弹出元素
+	/*PopFrom_SeqStack(stack);
+	printf("栈中还有%d个元素\n", SizeOf_SeqStack(stack));
+	pp = TopOf_SeqStack(stack);
+	printf("name:%s,age:%d\n", pp->name, pp->age);*/
+}
+
+
+int main(int argc, char const *argv[])
+{
+	testSeqStack();
+	system("pause");
+	return 0;
+}

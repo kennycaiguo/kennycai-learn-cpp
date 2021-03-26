@@ -1,0 +1,95 @@
+插入排序是指在待排序的元素中，假设前面n-1(其中n>=2)个数已经是排好顺序的，
+现将第n个数插到前面已经排好的序列中，然后找到合适自己的位置，使得插入第n个
+数的这个序列也是排好顺序的。 按照此法对所有元素进行插入，直到整个序列排为有
+序的过程，称为插入排序 。
+
+ 算法步骤
+将第一待排序序列第一个元素看做一个有序序列，把第二个元素到最后一个元素当成是未排序序列。
+
+从头到尾依次扫描未排序序列，将扫描到的每个元素插入有序序列的适当位置。（如果待插入的元素
+与有序序列中的某个元素相等，则将待插入元素插入到相等元素的后面。）
+
+实例：本实例有2种写法
+insertSort.c：
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <sys/timeb.h>
+#define MAX 10
+
+//封装一个获取系统时间的函数，用于计时
+long GetSystemTime()
+{
+	struct timeb tb;
+	ftime(&tb);
+	return tb.time * 1000 + tb.millitm;
+}
+
+void swap(int* x, int* y)
+{
+	int tmp = *x;
+	*x = *y;
+	*y = tmp;
+}
+//插入排序法
+void insertion_sort(int arr[], int len){ //写法1
+	int i, j, key;
+	for (i = 1; i<len; i++){
+		key = arr[i];
+		j = i - 1;
+		while ((j >= 0) && (arr[j]>key)) {
+			arr[j + 1] = arr[j];
+			j--;
+		}
+		arr[j + 1] = key;
+	}
+}
+
+void insertion_sort2(int arr[], int length)//写法2
+{
+	int j, tmp;
+	for (int i = 1; i < length; i++)
+	{
+		if (arr[i] < arr[i - 1])
+		{
+			tmp = arr[i];
+			for (j = i - 1; j >= 0 && tmp<arr[j]; j--)
+			{
+				arr[j + 1] = arr[j];
+			}
+			arr[j + 1] = tmp;
+		}
+	}
+}
+void PrintArr(int* arr, int len)
+{
+	for (int i = 0; i < len; i++)
+	{
+		printf("%d ", arr[i]);
+
+	}
+	printf("\n");
+}
+
+void testInsertSort()
+{
+	int arr[MAX];
+	srand((unsigned int)time(NULL));
+	for (int i = 0; i < MAX; i++)
+	{
+		arr[i] = rand() % MAX;
+	}
+	printf("before sort\n");
+	PrintArr(arr, MAX);
+	insertion_sort2(arr, MAX);
+	printf("After sort\n");
+	PrintArr(arr, MAX);
+}
+int main(int argc, char const *argv[])
+{
+	testInsertSort();
+	system("pause");
+	return 0;
+}

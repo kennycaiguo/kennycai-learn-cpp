@@ -1,0 +1,338 @@
+我们使用的表达式是中缀表达式，计算机不明白。计算机需要使用后缀表达式即将操作符放在数字后面
+的表达式。所以在计算机运行程序的时候需要将中缀表达式转换为后缀表达式：
+如：
+
+          中缀表达式=========》为后缀表达式
+           5+4 ------------------------>5 4 +
+           1+2*3----------------------->1 2 3 * +
+            8+(3-1)*5------------------->831-5*+
+转换算法：
+遍历中缀表达式中的数字和符号：
+1.如果是数字，直接输出；
+2.对于符号：
+（1）左括号，直接进栈
+  (2)  运算符：与栈顶符号优先级比较
+         <1>.如果该符号优先级比栈顶符号高，该符号直接进栈（默认左括号优先级最低）
+         <2>.如果该符号优先级比栈顶符号低，将栈顶元素弹出，然后该符号进栈。
+3.对于右括号，将栈顶符号输出并弹出，直到匹配到左括号，break；
+遍历结束，将栈中的所有符号输出然后弹出
+
+本实例有三个文件：
+LinkStack.h，LinkStack.c，infixexpress.c
+
+LinkStack.h：
+#ifndef LINKSTACK_H
+#define LINKSTACK_H
+#include<stdio.h>
+#include<stdlib.h>
+
+//链式栈的小节点
+typedef struct LINKNODE
+{
+	struct LINKNODE* next;
+}LinkNode;
+
+//链时栈
+typedef struct LINKSTACK
+{
+	struct LINKNODE  head;
+	int size;
+}LinkStack;
+
+//1.初始化链式栈
+LinkStack* Init_LinkStack();
+//2.入栈
+void PushIn_LinkStack(LinkStack* ls, LinkNode *data);
+
+//3.出栈
+void PopFrom_LinkStack(LinkStack* ls);
+//4.返回栈顶元素
+LinkNode* TopOf_LinkStack(LinkStack* ls);
+//5.返回栈中元素个数
+int SizeOf_LinkStack(LinkStack* ls);
+
+//6.清空栈
+void Clear_LinkStack(LinkStack* ls);
+
+//7.释放栈空间
+void Free_LinkStack(LinkStack* ls);
+#endif
+****************************
+LinkStack.c：
+#include"LinkStack.h"
+/*
+本实例利用链表来模拟栈空间，链表采用头插法，第一个元素代表栈顶元素，
+push就是插入数据（头插法），pop就是删除第一个节点（头节点的next），
+注意必须遵循先进后出的原则也就是只能由头插法，否则没有栈的效果。
+
+*/
+//1.初始化链式栈
+LinkStack* Init_LinkStack()
+{
+	LinkStack* ls = (LinkStack*)malloc(sizeof(LinkStack));
+	ls->head.next = NULL;
+	ls->size = 0;
+	return ls;
+}
+//2.入栈
+void PushIn_LinkStack(LinkStack* ls, LinkNode *data)
+{
+	if (ls == NULL)
+	{
+		return;
+	}
+	if (data == NULL)
+	{
+		return;
+	}
+	//头插法
+	data->next =ls->head.next;
+	ls->head.next = data;
+
+	//更新size
+	ls->size++;
+}
+
+//3.出栈
+void PopFrom_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return;
+	}
+	if (ls->size == 0)
+	{
+		return;
+	}
+	LinkNode* pNext = ls->head.next;
+		ls->head.next = pNext->next;
+	ls->size--;
+}
+//4.返回栈顶元素
+LinkNode* TopOf_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return NULL;
+	}
+	if (ls->size == 0)
+	{
+		return NULL;
+	}
+	return ls->head.next;
+
+}
+//5.返回栈中元素个数
+int SizeOf_LinkStack(LinkStack* ls)
+{
+	if (ls == NULL)
+	{
+		return -1;
+	}
+	
+	return ls->size;
+}
+
+//6.清空栈
+void Clear_LinkStack(LinkStack* ls)
+{
+
+	if (ls == NULL)
+	{
+		return;
+	}
+	ls->head.next = NULL;
+	ls->size = 0;
+}
+
+//7.释放栈空间
+void Free_LinkStack(LinkStack* ls)
+{
+	if (ls != NULL)
+	{
+		free(ls);
+	}
+}
+****************************
+infixexpress.c：
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include"LinkStack.h"
+/*
+ 栈的应用2中缀表达式=>后缀表达式(因为电脑只认识后缀表达式)
+*/
+
+//数据结构体
+typedef struct MyString
+{
+	LinkNode head;
+	char* pAddr;
+	 
+}MyString;
+//定义一个识别数字的函数
+int IsNum(char c)
+{
+	return c >= '0'&& c <= '9';
+}
+//定义一个数字操作函数
+void NumberOperate(char* p)
+{
+	printf("%c", *p);
+}
+//定义一个创建数据的方法
+MyString* CreateMyString(char* p)
+{
+	MyString* mystr = (MyString*)malloc(sizeof(MyString));
+	mystr->pAddr = p;
+ 
+	return mystr;
+}
+//定义一个判断左括号的函数
+int IsLeftParenthis(char c)
+{
+	return c == '(';
+
+}
+//定义一个判断右号的函数
+int IsRightParenthis(char c)
+{
+	return c == ')';
+
+}
+
+//定义一个判断运算符的函数
+int IsMathOperator(char c)
+{
+	return c == '+' || c == '-' || c == '*' || c == '/';
+}
+//定义一个判断运算符优先级的函数
+int GetPriorty(char c)
+{
+	if (c == '*' || c == '/')
+	{
+		return 2;
+	}
+	if (c == '+' || c == '-')
+	{
+		return 1;
+	}
+	return 0;
+}
+//定义一个操作左括号的函数
+void LeftParenthisOp(LinkStack* stack,char* p)
+{
+	PushIn_LinkStack(stack, (LinkNode*)CreateMyString(p));
+}
+
+//定义一个右括号处理函数
+void RightParenthisOp(LinkStack* ls)
+{
+	//先判断栈中有没有元素
+	while (SizeOf_LinkStack(ls)>0)
+	{
+		MyString* mstr = (MyString*)TopOf_LinkStack(ls);
+		//如果匹配到左括号
+		if (IsLeftParenthis(*(mstr->pAddr)))
+		{
+			//只是弹出
+			PopFrom_LinkStack(ls);
+			break;
+		}
+		//先输出栈顶元素，再弹出栈
+		printf("%c", *(mstr->pAddr));
+		PopFrom_LinkStack(ls);
+		//弹出后需要释放内存
+		free(mstr);
+	}
+}
+ 
+//运算符处理
+void OperatorProc(LinkStack* ls, char* p)
+{
+	//先取出栈顶符号
+	MyString* mstr = (MyString*)TopOf_LinkStack(ls);
+	if (mstr == NULL)
+	{
+		PushIn_LinkStack(ls, (LinkNode*)CreateMyString(p));
+		return;
+	}
+	//如果当前符号的优先级比栈顶元素高，则直接入栈
+	if (GetPriorty(*(mstr->pAddr)) < GetPriorty(*p))
+	{
+		PushIn_LinkStack(ls, (LinkNode*)CreateMyString(p));
+		return;
+	}
+	//如果当前符号的优先级比栈顶元素低
+	else
+	{
+		while (SizeOf_LinkStack(ls)>0)
+		{
+			MyString* mstr2 = (MyString*)TopOf_LinkStack(ls);
+
+			if (GetPriorty(*(mstr2->pAddr)) < GetPriorty(*p))
+			{
+				PushIn_LinkStack(ls, (LinkNode*)CreateMyString(p));
+				break;
+			}
+			//输出
+			printf("%c", *(mstr2->pAddr));
+			//弹出
+			PopFrom_LinkStack(ls);
+			//释放空间
+			free(mstr2);
+		}
+	}
+}
+void testInfixExpression()
+{
+	char* str = "8+(3-1)*5";
+	char* p = str;
+
+	//创建一个链式栈原来存储符号
+	LinkStack* ls = Init_LinkStack();
+	while (*p != '\0')
+	{
+		//如果是数字，直接输出
+		if (IsNum(*p))
+		{
+			NumberOperate(p);
+		}
+		//如果是左括号，进栈
+		if (IsLeftParenthis(*p))
+		{
+			LeftParenthisOp(ls, p);
+		}
+		//如果是右括号，将栈顶元素弹出，直到匹配到左括号为止
+		if (IsRightParenthis(*p))
+		{
+			RightParenthisOp(ls);
+		}
+		//如果是运算符号
+		if (IsMathOperator(*p))
+		{
+			OperatorProc(ls, p);
+		}
+		p++;
+	}
+	while (SizeOf_LinkStack(ls)>0)
+	{
+		MyString* mstr2 = (MyString*)TopOf_LinkStack(ls);
+		printf("%c",*(mstr2->pAddr));
+		PopFrom_LinkStack(ls);
+		free(mstr2);
+	}
+}
+int main(int argc, char const *argv[])
+{
+	testInfixExpression();
+	system("pause");
+	return 0;
+}
+*************************************
+
+
+
+

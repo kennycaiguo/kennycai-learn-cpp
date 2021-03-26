@@ -1,0 +1,121 @@
+先序遍历：先访问根节点，再访问左节点，然后访问右节点；DLR
+中序遍历：先访问左节点，再访问根节点，然后访问右节点；LDR
+后序遍历：先访问左节点，再访问右节点，然后访问根节点；LRD
+本实例有一个文件：btreetravel.c
+内容如下：
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+/*
+c语言遍历二叉树
+*/
+//定义二叉树节点结构体
+typedef struct BinaryNode
+{
+	char ch;
+	struct BinaryNode* lChild;
+	struct BinaryNode* rChild;
+}BinaryNode;
+
+//定义一个按先序遍历二叉树的函数
+void RecursionBtreeFirst(BinaryNode* root)
+{
+	//判断跟节点是否为空
+	if (root == NULL)
+	{
+		return;
+	}
+	//先序遍历
+	//先访问跟节点
+	printf("%c", root->ch);
+	//遍历左子树
+	RecursionBtreeFirst(root->lChild);
+	//再遍历右子树
+	RecursionBtreeFirst(root->rChild);
+}
+
+//定义一个按中序遍历二叉树的函数
+void RecursionBtreeMid(BinaryNode* root)
+{
+	//判断跟节点是否为空
+	if (root == NULL)
+	{
+		return;
+	}
+	//中序遍历
+	
+	//先遍历左子树
+	RecursionBtreeMid(root->lChild);
+	//访问跟节点
+	printf("%c", root->ch);
+	//再遍历右子树
+	RecursionBtreeMid(root->rChild);
+}
+
+//定义一个按后序遍历二叉树的函数
+void RecursionBtreeLast(BinaryNode* root)
+{
+	//判断跟节点是否为空
+	if (root == NULL)
+	{
+		return;
+	}
+	//后序遍历
+	
+	//先遍历左子树
+	RecursionBtreeLast(root->lChild);
+	//再遍历右子树
+	RecursionBtreeLast(root->rChild);
+	//访问跟节点
+	printf("%c", root->ch);
+}
+void CreateBinaryTree()
+{
+	//创建所有节点
+	BinaryNode node1 = { 'A', NULL, NULL };
+	BinaryNode node2 = { 'B', NULL, NULL };
+	BinaryNode node3 = { 'C', NULL, NULL };
+	BinaryNode node4 = { 'D', NULL, NULL };
+	BinaryNode node5 = { 'E', NULL, NULL };
+	BinaryNode node6 = { 'F', NULL, NULL };
+	BinaryNode node7 = { 'G', NULL, NULL };
+	BinaryNode node8 = { 'H', NULL, NULL };
+
+	//开始创建二叉树
+	//A节点是跟节点，它的左子节点是B,右子节点是F
+	node1.lChild = &node2;
+	node1.rChild = &node6;
+
+	//B节点，没有左子节点，右子节点是C（node3）
+	node2.rChild = &node3;
+
+	//C节点，它的左子节点是D（node4），右子节点是E（node5）
+	node3.lChild = &node4;
+	node3.rChild = &node5;
+
+	//F节点，它没有子左节点，它的右子节点是G节点（node7）
+	node6.rChild = &node7;
+
+	//G节点，它只有左子节点是H节点(node8)
+	node7.lChild = &node8;
+	//先序遍历
+	//RecursionBtreeFirst(&node1);
+	//中序遍历
+	//RecursionBtreeMid(&node1);
+	//后序遍历
+	RecursionBtreeLast(&node1);
+}
+void binaryTreeTravel()
+{
+	CreateBinaryTree();
+}
+int main(int argc, char const *argv[])
+{
+	binaryTreeTravel();
+	printf("\n");
+	system("pause");
+	return 0;
+}
+

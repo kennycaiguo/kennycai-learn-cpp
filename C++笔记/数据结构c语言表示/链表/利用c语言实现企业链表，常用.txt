@@ -1,0 +1,272 @@
+企业链表的有一个小节点，利用这个节点将整个链表连接起来。
+这个小节点注意指针域，没有数据域。
+然后有一个链表结构体，这个链表结构体的第一个元素是一个小节点的指针。还维护一个size变量。
+注意，这个小节点的指针一定要放在第一位。
+
+需要自己第一一个结构体，这个结构体格式如下：
+typedef struct Person{
+	//相当于衣服的挂钩，必须写在第一个，因为它需要首地址
+	LinkNode node;
+	char name[65];
+	int age;
+
+}Person;
+
+实现思路：创建链表的时候，需要将上面的数据结构体指针转换位小节点的指针然后插入链表，
+需要操作数据的时候，需要将获取到的小节点指针转换位数据结构体指针，再来操作。
+好处：实现的代码比较简单。不过有些操作需要自己写回调函数。
+实例：
+有3个文件：EnterpriseLinkList.h，EnterpriseLinkList.c，main.c
+
+EnterpriseLinkList.h:
+#ifndef ENTERPRICELINKLIST_H
+#define ENTERPRICELINKLIST_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+//链表小节点
+typedef struct LINKNODE
+{
+	struct LINKNODE* next;
+}LinkNode;
+
+//链表节点
+typedef struct LINKLIST
+{
+	struct LINKNODE head;
+	int size;
+}LinkList;
+
+//输出节点数据的回调函数
+typedef void(*MYPRINT)(LinkNode*);
+//实现比较的回调函数
+typedef int(*COMPARENODE)(LinkNode*, LinkNode*);
+//1.初始化链表
+LinkList* Init_LinkList();
+//2.插入数据
+void InsertInto_LinkList(LinkList* plist,int pos,LinkNode* pdata);
+//3.删除节点
+void RemoveFrom_LinkList(LinkList* plist,int pos);
+//4.获取链表大小
+int GetSizeOf_LinkList(LinkList* plist);
+//5.输出链表节点数据
+void PrintLinkList(LinkList* plist,MYPRINT print);
+//6.查找
+int FindIn_LinkList(LinkList* plist, LinkNode* pdata,COMPARENODE compare);
+//7.释放链表内存
+void Free_LinkList(LinkList* plist);
+#endif
+
+EnterpriseLinkList.c:
+#include"EnterpriseLinkList.h"
+
+//1.初始化链表
+LinkList* Init_LinkList()
+{
+	LinkList* list = (LinkList*)malloc(sizeof(LinkList));
+	list->head.next = NULL;
+	list->size = 0;
+	return list;
+}
+//2.插入数据
+void InsertInto_LinkList(LinkList* plist, int pos, LinkNode* pdata)
+{
+	if (plist == NULL)
+	{
+		return;
+	}
+	if (pdata == NULL)
+	{
+		return;
+	}
+	if (pos<0 || pos>plist->size)
+	{
+		pos = plist->size;
+	}
+	//查找插入位置
+	LinkNode *pCurrent = &(plist->head);
+	for (int i = 0; i < pos; i++)
+	{
+		pCurrent = pCurrent->next;
+	}
+	//插入新节点
+	pdata->next = pCurrent->next;
+	pCurrent->next = pdata;
+	//更新链表大小
+	plist->size++;
+}
+//3.删除节点
+void RemoveFrom_LinkList(LinkList* plist, int pos)
+{
+	//合法性判断
+	if (plist == NULL)
+	{
+		return ;
+	}
+	if (pos<0||pos>=plist->size)
+	{
+		return;
+	}
+	//辅助指针变量
+	LinkNode* pCurrent = &(plist->head);
+	for (int i = 0; i < pos; i++)
+	{
+		pCurrent = pCurrent->next;
+	}
+	//删除节点
+	LinkNode* pNext = pCurrent->next;
+	pCurrent->next=pNext->next;
+	
+	//free(pNext);//不要这个，否则报错
+	plist->size--;
+}
+//4.获取链表大小
+int GetSizeOf_LinkList(LinkList* plist)
+{
+	if (plist == NULL)
+	{
+		return 0;
+	}
+	return plist->size;
+}
+//5.输出链表节点数据
+void PrintLinkList(LinkList* plist, MYPRINT print)
+{
+	if (plist == NULL)
+	{
+		return;
+	}
+	//遍历输出数据，需要一共辅助指针
+	LinkNode* pCurrent = plist->head.next;
+	while (pCurrent!=NULL)
+	{
+		print(pCurrent);
+		pCurrent = pCurrent->next;
+	}
+}
+//6.查找
+int FindIn_LinkList(LinkList* plist, LinkNode* pdata, COMPARENODE compare)
+{
+	//合法性判断
+	if (plist == NULL)
+	{
+		return -1;
+	}
+	if (pdata == NULL)
+	{
+		return -1;
+	}
+	//辅助指针变量
+	//LinkNode* pCurrent = &(plist->head);
+	LinkNode* pCurrent = plist->head.next;
+	int pos = 0;
+	int index = -1;
+	while (pCurrent!=NULL)
+	{
+		if (compare(pCurrent ,pdata)==0)
+		{
+			index = pos;
+			break;
+		}
+		pCurrent = pCurrent->next;
+		pos++;
+	}
+	return index;
+}
+//7.释放链表内存
+void Free_LinkList(LinkList* plist)
+{
+	if (plist == NULL)
+	{
+		return;
+	}
+	free(plist);
+}
+
+main.c:
+
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include"EnterpriseLinkList.h"
+
+typedef struct Person{
+	//相当于衣服的挂钩，必须写在第一个，因为它需要首地址
+	LinkNode node;
+	char name[65];
+	int age;
+
+}Person;
+
+void InitPerson(Person* p,char *name, int age)
+{
+	if (p == NULL)
+	{
+		return;
+	}
+	if (name == NULL)
+	{
+		return;
+	}
+	strcpy(p->name, name);
+	p->age = age;
+}
+void MyPrint(LinkNode* pnode)
+{
+	Person* p = (Person*)pnode;
+	printf("Person[name:%s,age:%d]\n", p->name, p->age);
+}
+
+int CompareNode(LinkNode* n1, LinkNode* n2)
+{
+	Person* p1 = (Person*)n1;
+	Person* p2 = (Person*)n2;
+	if (strcmp(p1->name, p2->name) == 0 && p1->age==p2->age)
+	{
+		return 0;
+	}
+	return -1;
+}
+void testLinkList()
+{
+	//创建链表
+	LinkList *list = Init_LinkList();
+	//创建数据
+	Person p1, p2, p3, p4, p5;
+	InitPerson(&p1, "Andy",25);
+	InitPerson(&p2, "Ana",18);
+	InitPerson(&p3, "Ben",19);
+	InitPerson(&p4, "Brandy",20);
+	InitPerson(&p5, "Cindy",22);
+   //将节点插入到链表
+	InsertInto_LinkList(list, 0, (LinkNode*)&p1);
+	InsertInto_LinkList(list, 0, (LinkNode*)&p2);
+	InsertInto_LinkList(list, 0, (LinkNode*)&p3);
+	InsertInto_LinkList(list, 0, (LinkNode*)&p4);
+	InsertInto_LinkList(list, 0, (LinkNode*)&p5);
+	//输出链表元素
+	PrintLinkList(list, MyPrint);
+	//查找节点
+	Person target;
+	strcpy(target.name, p3.name);
+	target.age = p3.age;
+	int pos = FindIn_LinkList(list, (LinkNode*)&target,CompareNode);
+	 printf("位置%d\n", pos);
+	 
+	//删除节点
+	RemoveFrom_LinkList(list, 2);
+	printf("=================================\n");
+	PrintLinkList(list, MyPrint);
+	//释放链表内存
+	Free_LinkList(list);
+}
+int main(int argc, char const *argv[])
+{
+	testLinkList();
+	system("pause");
+	return 0;
+}
