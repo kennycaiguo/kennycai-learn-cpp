@@ -1,0 +1,104 @@
+  开闭原则：类的改动通过增加代码进行，而不是修改源代码。开：对于增加代码，扩展开放，闭：对于修改源代码
+  这是一个重要原则，必须掌握
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include <set>
+#include <sstream>
+
+using namespace std;
+/*
+  开闭原则：类的改动通过增加代码进行，而不是修改源代码。开：对于增加代码，扩展开放，闭：对于修改源代码
+  这是一个重要原则，必须掌握
+*/
+
+//定义一个抽象类
+class AbstractCalculator
+{
+public:
+	virtual void SetOperatorNums(int a, int b)=0;
+	virtual int getResult() = 0;
+};
+
+//加法计算器
+class PlusCalculator :public AbstractCalculator
+{
+public:
+	void SetOperatorNums(int a, int b)
+	{
+		this->m_a = a;
+		this->m_b = b;
+	}
+	virtual int getResult()
+	{
+		return this->m_a + this->m_b;
+	}
+public:
+	int m_a;
+	int m_b;
+};
+//减法计算器
+class MinusCalculator :public AbstractCalculator
+{
+public:
+	void SetOperatorNums(int a, int b)
+	{
+		this->m_a = a;
+		this->m_b = b;
+	}
+	virtual int getResult()
+	{
+		return this->m_a - this->m_b;
+	}
+public:
+	int m_a;
+	int m_b;
+};
+//乘法计算器
+class MultiplyCalculator :public AbstractCalculator
+{
+public:
+	void SetOperatorNums(int a, int b)
+	{
+		this->m_a = a;
+		this->m_b = b;
+	}
+	virtual int getResult()
+	{
+		return this->m_a * this->m_b;
+	}
+public:
+	int m_a;
+	int m_b;
+};
+//除法计算器
+class DivisionCalculator :public AbstractCalculator
+{
+public:
+	void SetOperatorNums(int a, int b)
+	{
+		this->m_a = a;
+		this->m_b = b;
+	}
+	virtual int getResult()
+	{
+		if (m_b != NULL)
+		{
+          return this->m_a + this->m_b;
+		}
+		
+	}
+public:
+	int m_a;
+	int m_b;
+};
+int main(int argc, char const *argv[])
+{
+	AbstractCalculator* p=new PlusCalculator();
+	p->SetOperatorNums(100, 200);
+	cout << "result=" << p->getResult() << endl;
+	delete p;
+	system("pause");
+	return 0;
+}

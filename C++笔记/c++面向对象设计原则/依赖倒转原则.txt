@@ -1,0 +1,113 @@
+依赖于抽象（接口），不要依赖于具体是实现（类），也就是针对接口编程
+
+实例：
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <sstream>
+
+/*
+  依赖倒转原则：针对接口编程
+*/
+using namespace std;
+
+//传统做法,没有扩展性，不好！
+class BankClerk{
+public:
+	void saveService()
+	{
+		cout << "saveService..." << endl;
+	}
+	void payService()
+	{
+		cout << "payService..." << endl;
+	}
+	void transferService()
+	{
+		cout << "transterService..." << endl;
+	}
+};
+
+void doSaveProc(BankClerk* bk)
+{
+	bk->saveService();
+}
+
+void doPayProc(BankClerk* bk)
+{
+	bk->payService();
+}
+
+void doTransferProc(BankClerk* bk)
+{
+	bk->transferService();
+}
+//依赖反转做法，有扩展性。
+//1.定义抽象类
+class AbstractWorker
+{
+public:
+	virtual void doProc() = 0;
+};
+//2.将每一个业务分开处理，尽量使得类的功能单一
+//存款业务工作人员
+class SaveBankWorker :public AbstractWorker
+{
+	virtual void doProc()
+	{
+		cout << "saveService..." << endl;
+	}
+};
+//付款业务工作人员
+class PayBankWorker :public AbstractWorker
+{
+	virtual void doProc()
+	{
+		cout << "payService..." << endl;
+	}
+};
+
+//转账业务工作人员
+class TransBankWorker :public AbstractWorker
+{
+	virtual void doProc()
+	{
+		cout << "transferService..." << endl;
+	}
+};
+//中层业务
+void doBusiness(AbstractWorker* worker)
+{
+	worker->doProc();
+	delete worker;
+}
+
+void testDip()
+{
+	BankClerk* bk = new BankClerk;
+	doSaveProc(bk);
+}
+
+void testDip2()
+{
+	AbstractWorker* worker = NULL;
+	worker = new SaveBankWorker;
+	doBusiness(worker);
+	//delete worker;
+	worker = new PayBankWorker;
+	doBusiness(worker);
+	//delete worker;
+	worker = new TransBankWorker;
+	doBusiness(worker);
+	//delete worker;
+}
+int main(int argc, char const *argv[])
+{
+	//testDip();
+	testDip2();
+	system("pause");
+	return 0;
+}

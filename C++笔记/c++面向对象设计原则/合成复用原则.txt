@@ -1,0 +1,78 @@
+如果使用继承会，导致父类的任何变换都可能影响到子类的行为。如果使用对象组合，
+就降低了这种依赖关系。对于继承和组合，优先使用组合。也就是说可以使用组合，
+就不要使用继承。
+实例：CompositPrinciple.cpp
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <sstream>
+
+/*
+ 合成复用原则，可以使用组合，就不要使用继承
+*/
+using namespace std;
+
+//定义抽象类
+class AbstractCar
+{
+public:
+	virtual void run() = 0;
+};
+
+class Bmw :public AbstractCar
+{
+	virtual void run()
+	{
+		cout << "vrrrmmmm,vrrrmmmm,Bmw is Running...." << endl;
+	}
+};
+
+class Benz :public AbstractCar
+{
+	virtual void run()
+	{
+		cout << "vrrrmmmm,vrrrmmmm,Benz is Running...." << endl;
+	}
+};
+
+class Person
+{
+public:
+	Person(){}
+	~Person(){
+		/*if (this->car != NULL)
+		{
+			delete this->car;
+		}*/
+	}
+	void setCar(AbstractCar* car)
+	{
+		this->car = car;
+	}
+	void DouFeng()
+	{
+		cout << "开车去兜风" << endl;
+		this->car->run();
+		delete car;
+	}
+public:
+	AbstractCar* car;
+};
+ 
+void testCompositePinciple()
+{
+	Person p;
+	AbstractCar* pcar = new Bmw();
+	p.setCar(pcar);
+	p.DouFeng();
+	p.setCar(new Benz);
+	p.DouFeng();
+}
+int main(int argc, char const *argv[])
+{
+	testCompositePinciple();
+	system("pause");
+	return 0;
+}
