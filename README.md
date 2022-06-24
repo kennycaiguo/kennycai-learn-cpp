@@ -1,6 +1,7 @@
 # learn-cpp
 codes and docs for learners of c++
 # <a href="https://www.microsoft.com/en-us/download/details.aspx?id=35825">下载vs2015图片库</a>
+# <a href="https://github.com/pranavlathigara/Coding-Developer-Book">一些编程开发的好书，也欢迎你的分享！</a>
 # c++开源库大全
 标准库
 1. C++ Standard Library：是一系列类和函数的集合，使用核心语言编写，也是C++ISO自身标准的一部分。
